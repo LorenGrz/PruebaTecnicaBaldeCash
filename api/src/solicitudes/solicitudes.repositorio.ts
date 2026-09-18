@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { esUuid } from '../comun/index.js';
 import {
+  ErrorDeConflicto,
   Solicitud,
   type EstadoSolicitud,
   type Usuario,
@@ -13,6 +14,26 @@ import {
   aSolicitudDeEntidad,
   aUsuarioDeDominio,
 } from '../persistencia/index.js';
+
+/**
+ * Índice único parcial que sostiene "una sola solicitud activa por estudiante"
+ * a nivel de base (ver la migración `UnicidadDeSolicitudActiva`).
+ */
+const INDICE_DE_SOLICITUD_ACTIVA = 'idx_solicitudes_activa_por_usuario';
+
+/** Violación de unicidad en PostgreSQL. */
+const CODIGO_DE_UNICIDAD = '23505';
+
+/**
+ * El driver devuelve un error con `code` y `constraint`, pero llega tipado como
+ * `unknown`: se lo estrecha acá en vez de castearlo.
+ */
+function esViolacionDelIndice(error: unknown, indice: string): boolean {
+  if (typeof error !== 'object' || error === null) return false;
+
+  const posible = error as { code?: unknown; constraint?: unknown };
+  return posible.code === CODIGO_DE_UNICIDAD && posible.constraint === indice;
+}
 
 /** Una solicitud con su estudiante ya resuelto, para no consultar de a una. */
 export interface SolicitudConEstudiante {
@@ -43,9 +64,27 @@ export class SolicitudesRepositorio {
   ) {}
 
   async guardar(solicitud: Solicitud): Promise<Solicitud> {
-    const fila = await this.filas.save(
-      this.filas.create(aSolicitudDeEntidad(solicitud)),
-    );
+    let fila: SolicitudEntidad;
+
+    try {
+      fila = await this.filas.save(this.filas.create(aSolicitudDeEntidad(solicitud)));
+    } catch (error) {
+      /*
+       * La verificación previa del servicio cubre el caso normal, pero entre
+       * consultar y escribir hay una ventana: dos peticiones simultáneas del
+       * mismo estudiante —un doble clic alcanza— podrían pasar las dos. El
+       * índice único parcial las frena en la base, y acá se traduce ese fallo
+       * al mismo 409 que habría devuelto la verificación, para que el cliente
+       * vea una sola respuesta posible y no un 500.
+       */
+      if (esViolacionDelIndice(error, INDICE_DE_SOLICITUD_ACTIVA)) {
+        throw new ErrorDeConflicto(
+          'Ya tenés una solicitud en curso. Esperá a que se resuelva para pedir otra.',
+          'SOLICITUD_ACTIVA_EXISTENTE',
+        );
+      }
+      throw error;
+    }
 
     // En un UPDATE, TypeORM devuelve solo lo que escribió: la fecha de creación
     // no vuelve y la respuesta saldría con `creadoEn: null`. La conserva el
