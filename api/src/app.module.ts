@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller.js';
 import { configuracion } from './config/index.js';
+import { PersistenciaModule } from './persistencia/persistencia.module.js';
 
 @Module({
   imports: [
@@ -10,6 +11,7 @@ import { configuracion } from './config/index.js';
       load: [configuracion],
       envFilePath: '.env',
     }),
+    PersistenciaModule,
   ],
   controllers: [AppController],
 })

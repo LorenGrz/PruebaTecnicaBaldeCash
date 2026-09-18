@@ -1,7 +1,16 @@
+export interface ConfiguracionDeBase {
+  host: string;
+  puerto: number;
+  usuario: string;
+  password: string;
+  nombre: string;
+}
+
 export interface Configuracion {
   puerto: number;
   origenWeb: string;
   tasaAnual: number;
+  base: ConfiguracionDeBase;
 }
 
 const TASA_ANUAL_POR_DEFECTO = 0.24;
@@ -38,8 +47,19 @@ function leerPuerto(valor: string | undefined): number {
   return puerto;
 }
 
+export function leerConfiguracionDeBase(): ConfiguracionDeBase {
+  return {
+    host: process.env.DB_HOST ?? 'localhost',
+    puerto: Number(process.env.DB_PORT ?? 5432),
+    usuario: process.env.DB_USER ?? 'baldecash',
+    password: process.env.DB_PASSWORD ?? 'baldecash',
+    nombre: process.env.DB_NAME ?? 'baldecash',
+  };
+}
+
 export const configuracion = (): Configuracion => ({
   puerto: leerPuerto(process.env.PORT),
   origenWeb: process.env.WEB_ORIGIN ?? 'http://localhost:3000',
   tasaAnual: leerTasaAnual(process.env.TASA_ANUAL),
+  base: leerConfiguracionDeBase(),
 });
