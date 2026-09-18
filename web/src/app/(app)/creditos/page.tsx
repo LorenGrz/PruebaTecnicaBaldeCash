@@ -3,6 +3,8 @@ import Link from "next/link";
 import { TarjetaDeError } from "@/components/TarjetaDeError";
 import { FiltroDeEstado } from "@/components/formularios/FiltroDeEstado";
 import { Badge } from "@/components/ui/Badge";
+import { Revelar } from "@/components/ui/Revelar";
+import { TarjetaDeSolicitud } from "@/components/TarjetaDeSolicitud";
 import { Celda, Fila, Tabla } from "@/components/ui/Tabla";
 import { Tarjeta } from "@/components/ui/Tarjeta";
 import { Solicitud, type EstadoSolicitud } from "@/dominio";
@@ -84,15 +86,31 @@ export default async function PaginaDeCreditos(props: PageProps<"/creditos">) {
         </div>
       </Tarjeta>
 
-      <Tarjeta className="p-0 sm:p-0">
-        {data.length === 0 ? (
-          <p className="px-6 py-12 text-center text-sm text-bc-apagado">
+      {/*
+        Dos presentaciones de los mismos datos, elegidas por ancho: tarjetas en
+        móvil y tabla desde `md`. La tabla necesita 46rem para leerse; forzarla
+        en 390px esconde el estado detrás de un desplazamiento horizontal.
+      */}
+      {data.length === 0 ? (
+        <Tarjeta>
+          <p className="py-8 text-center text-sm text-bc-apagado">
             No hay solicitudes con ese estado.
           </p>
-        ) : (
-          <Tabla columnas={COLUMNAS}>
-            {data.map((solicitud) => (
-              <Fila key={solicitud.id}>
+        </Tarjeta>
+      ) : (
+        <>
+          <ul key={`${estadoCrudo}-${pagina}`} className="flex flex-col gap-3 md:hidden">
+            {data.map((solicitud, posicion) => (
+              <Revelar como="li" key={solicitud.id} indice={posicion}>
+                <TarjetaDeSolicitud solicitud={solicitud} />
+              </Revelar>
+            ))}
+          </ul>
+
+          <Tarjeta className="hidden p-0 sm:p-0 md:block">
+            <Tabla columnas={COLUMNAS}>
+              {data.map((solicitud, posicion) => (
+                <Fila key={solicitud.id} indice={posicion}>
                 <Celda>
                   <span className="block font-semibold">
                     {solicitud.estudiante?.nombre ?? "—"}
@@ -120,14 +138,18 @@ export default async function PaginaDeCreditos(props: PageProps<"/creditos">) {
                     Ver
                   </Link>
                 </Celda>
-              </Fila>
-            ))}
-          </Tabla>
-        )}
-      </Tarjeta>
+                </Fila>
+              ))}
+            </Tabla>
+          </Tarjeta>
+        </>
+      )}
 
       {ultimaPagina > 1 && (
-        <nav aria-label="Paginación" className="flex items-center justify-end gap-3">
+        <nav
+          aria-label="Paginación"
+          className="flex flex-wrap items-center justify-end gap-3"
+        >
           <span className="text-sm text-bc-apagado">
             Página {pagina} de {ultimaPagina}
           </span>
