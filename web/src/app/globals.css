@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens de BaldeCash.
+ * Fuente: proyecto de Google Stitch "BaldeCash Student Financing App",
+ * alineado con la identidad de baldecash.com.
+ * Regla del proyecto: los componentes usan solo estos tokens, nunca hex sueltos.
+ */
+@theme {
+  /* Marca */
+  --color-bc-primary: #4654cd;
+  --color-bc-primary-suave: #eef0fb;
+  --color-bc-acento: #03dbd0;
+  --color-bc-acento-suave: #e6fbfa;
+
+  /* Texto y superficies */
+  --color-bc-tinta: #0a0a0a;
+  --color-bc-apagado: #525252;
+  --color-bc-borde: #e5e5e5;
+  --color-bc-superficie: #ffffff;
+  --color-bc-fondo: #fafafa;
+
+  /* Estados de la solicitud */
+  --color-bc-pendiente: #f59e0b;
+  --color-bc-pendiente-suave: #fef3c7;
+  --color-bc-aprobada: #22c55e;
+  --color-bc-aprobada-suave: #dcfce7;
+  --color-bc-rechazada: #ef4444;
+  --color-bc-rechazada-suave: #fee2e2;
+
+  /* Tipografía */
+  --font-display: var(--fuente-display), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--fuente-texto), ui-sans-serif, system-ui, sans-serif;
+
+  /* Formas */
+  --radius-tarjeta: 14px;
+  --radius-campo: 10px;
+}
+
+body {
+  background: var(--color-bc-fondo);
+  color: var(--color-bc-tinta);
+  font-family: var(--font-sans);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
