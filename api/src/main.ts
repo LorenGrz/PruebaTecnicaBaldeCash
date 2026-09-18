@@ -2,13 +2,15 @@ import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { Logger } from '@nestjs/common';
 import { AppModule } from './app.module.js';
+import { configurarAplicacion } from './comun/index.js';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const config = app.get(ConfigService);
 
-  // Todas las rutas cuelgan de /api para no chocar con el frontend.
-  app.setGlobalPrefix('api');
+  // Prefijo /api, validación 422 y filtro de errores: lo mismo que usan los
+  // tests e2e, para que no se prueben condiciones distintas a las reales.
+  configurarAplicacion(app);
 
   app.enableCors({ origin: config.getOrThrow<string>('origenWeb') });
 
