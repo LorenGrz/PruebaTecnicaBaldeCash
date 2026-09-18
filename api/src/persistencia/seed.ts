@@ -22,6 +22,13 @@ const usuarios = [
     rol: 'admin' as const,
   },
   {
+    nombre: 'Loren Graizzaro',
+    dni: '44554475',
+    email: 'loren@baldecash.com',
+    telefono: '955667788',
+    rol: 'admin' as const,
+  },
+  {
     nombre: 'Clara Fernández',
     dni: '45871203',
     email: 'clara.fernandez@ejemplo.pe',
@@ -52,11 +59,26 @@ const usuarios = [
 ];
 
 const solicitudes = [
-  { dni: '45871203', monto: 3000, plazoMeses: 12, estado: 'pendiente' as const },
+  {
+    dni: '45871203',
+    monto: 3000,
+    plazoMeses: 12,
+    estado: 'pendiente' as const,
+  },
   { dni: '78129034', monto: 5500, plazoMeses: 18, estado: 'aprobada' as const },
   { dni: '61203948', monto: 1200, plazoMeses: 6, estado: 'rechazada' as const },
-  { dni: '39485712', monto: 10000, plazoMeses: 24, estado: 'pendiente' as const },
-  { dni: '61203948', monto: 2500, plazoMeses: 12, estado: 'pendiente' as const },
+  {
+    dni: '39485712',
+    monto: 10000,
+    plazoMeses: 24,
+    estado: 'pendiente' as const,
+  },
+  {
+    dni: '61203948',
+    monto: 2500,
+    plazoMeses: 12,
+    estado: 'pendiente' as const,
+  },
 ];
 
 async function sembrar(): Promise<void> {
@@ -74,7 +96,9 @@ async function sembrar(): Promise<void> {
 
     for (const datos of usuarios) {
       const usuario = Usuario.crear(datos);
-      const fila = await repoUsuarios.save(repoUsuarios.create(aUsuarioDeEntidad(usuario)));
+      const fila = await repoUsuarios.save(
+        repoUsuarios.create(aUsuarioDeEntidad(usuario)),
+      );
       guardados.set(usuario.dni, fila.id);
     }
 
@@ -102,7 +126,9 @@ async function sembrar(): Promise<void> {
       if (datos.estado === 'aprobada') solicitud.aprobar(admin);
       if (datos.estado === 'rechazada') solicitud.rechazar(admin);
 
-      await repoSolicitudes.save(repoSolicitudes.create(aSolicitudDeEntidad(solicitud)));
+      await repoSolicitudes.save(
+        repoSolicitudes.create(aSolicitudDeEntidad(solicitud)),
+      );
     }
 
     console.log(
