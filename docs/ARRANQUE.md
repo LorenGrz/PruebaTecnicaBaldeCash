@@ -47,14 +47,20 @@ la incrusta en el bundle del cliente en build time (es un `ARG` de
 usuario pueda llegar desde fuera de la red de Docker: `http://localhost:3001/api`,
 el puerto que `api` publica en el host.
 
-Si en algún punto `web` necesita llamar a la API **desde el servidor** de
-Next (Server Components o Route Handlers, no desde el navegador), esa
-llamada tiene que usar la URL interna de la red de Compose,
-`http://api:3001/api` (el nombre del servicio, no `localhost`), porque
-`localhost` dentro del contenedor de `web` no resuelve a `api`. Hoy el
-frontend no hace ese tipo de llamadas; si se agregan, conviene una variable
-de entorno separada (sin el prefijo `NEXT_PUBLIC_`, para que no se filtre al
-navegador) con ese valor.
+El frontend **sí** llama a la API desde el servidor de Next: las pantallas
+son server components y traen sus datos ahí. Esas llamadas no pueden usar
+`localhost`, porque dentro del contenedor de `web` eso apunta al propio
+`web` y no a `api`. Para eso está `API_URL_INTERNA`, que el compose fija en
+`http://api:3001/api` (el nombre del servicio en la red de Compose). Va sin
+el prefijo `NEXT_PUBLIC_` justamente para que no se filtre al bundle del
+navegador.
+
+Resumiendo las dos URLs, que son distintas a propósito:
+
+| Variable | Quién la usa | Valor en Compose |
+|---|---|---|
+| `NEXT_PUBLIC_API_URL` | el navegador del usuario | `http://localhost:3001/api` |
+| `API_URL_INTERNA` | el servidor de Next | `http://api:3001/api` |
 
 ### Cambiar puertos o credenciales
 
