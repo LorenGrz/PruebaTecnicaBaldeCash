@@ -101,3 +101,92 @@ prevista en un 500 genérico con un `requestId`.
 mensajes debajo del campo correspondiente sin adivinar formatos. El `requestId` permite
 encontrar el error real en los logs sin filtrarle al cliente el stack trace, el nombre de
 la tabla ni la consulta que falló.
+
+---
+
+## 6. Identidad sin contraseña
+
+**Problema.** El producto necesita roles — el estudiante y el analista de créditos no ven lo mismo, y el detalle de una solicitud no puede ser público — pero la prueba se evalúa en 4 horas y ninguno de los cinco criterios premia la autenticación.
+
+**Opciones.** (1) Login real con hash, JWT y refresh. (2) Un selector "actuar como" en la cabecera. (3) Ingreso por DNI, sin contraseña, con la identidad viajando en una cabecera.
+
+**Elección.** La 3.
+
+**Por qué.** Se navega como una aplicación real — hay pantalla de ingreso, sesión y rutas que respetan el rol — sin gastar dos horas en criptografía que después habría que defender a medias. Un JWT sin expiración ni refresh es peor que no tenerlo: aparenta seguridad donde no la hay.
+
+La API recibe la identidad en `x-usuario-id` y un guard la resuelve a un usuario con su rol. El archivo está marcado con `// SIMPLIFICACIÓN:` y es lo primero que cambiaría con más tiempo: ese guard es exactamente el punto donde entraría la verificación del token, sin tocar servicios ni controladores.
+
+**Qué costó.** Cualquiera que conozca un id puede hacerse pasar por ese usuario. Es aceptable en una prueba técnica e inaceptable en producción; está escrito en el README para que nadie lo descubra leyendo el código.
+
+---
+
+## 7. Una sola aplicación con navegación por rol
+
+**Problema.** El enunciado pide dos vistas. Con dos roles, ¿son dos aplicaciones, dos rutas sueltas, o una que se adapta?
+
+**Elección.** Una aplicación con barra lateral filtrada por rol. El administrador ve solo *Gestión de créditos*; el estudiante ve *Mi resumen* y, si no tiene una solicitud activa, *Solicitar financiamiento*.
+
+**Por qué.** Es como funciona el producto real: la misma plataforma, distinto lo que cada uno puede hacer. Y evita el error clásico de "esconder el botón": el filtro se aplica **dos veces**, en la barra lateral y del lado del servidor al entrar a la ruta. Un administrador que escribe `/solicitar` a mano es redirigido, y un estudiante que escribe `/creditos` también. Ocultar una opción es comodidad de la interfaz; la regla la aplica el servidor.
+
+---
+
+## 8. El dominio duplicado entre backend y frontend
+
+**Problema.** Las clases de dominio tienen que correr en los dos lados, pero el repositorio son dos proyectos independientes, sin workspace de pnpm.
+
+**Opciones.** (1) Monorepo con `packages/dominio`. (2) Publicar el dominio como paquete npm. (3) Copiar los archivos y verificar que las copias no divergen.
+
+**Elección.** La 3, con `pnpm dominio:verificar`, que compara las dos carpetas y falla si difieren.
+
+**Por qué.** El monorepo es la respuesta correcta para un proyecto que va a crecer, y es lo que haría con más tiempo. Para esta entrega valía más que cada proyecto se levante solo con un `pnpm install`, sin obligar al evaluador a entender una configuración de workspace para correr la API. La copia es deliberada, no un descuido, y el script lo demuestra: si alguien cambia una regla en un lado y no en el otro, la verificación falla.
+
+**Qué costó.** La única diferencia tolerada es la extensión `.js` de los imports relativos: la API corre en Node con ESM y la necesita; el bundler del frontend no la resuelve. El verificador normaliza exactamente eso y nada más.
+
+---
+
+## 9. El estado de la solicitud no se escribe, se transiciona
+
+**Problema.** Aprobar una solicitud podría ser un `UPDATE solicitudes SET estado = 'aprobada'`.
+
+**Elección.** `PATCH /solicitudes/:id/estado` llama a `solicitud.aprobar(usuario)` o `solicitud.rechazar(usuario)`, que verifican quién lo pide y desde qué estado se sale.
+
+**Por qué.** Escribir la columna directo deja la regla en el controller, donde hay que acordarse de repetirla en cada lugar que toque el estado. Al ponerla en el objeto, una solicitud ya resuelta no puede volver a cambiar **desde ningún lado**. El seeder es la prueba: construye los datos de ejemplo llamando a `aprobar()` y `rechazar()`, así que si mañana una transición deja de ser válida, el seed falla en vez de generar filas que la aplicación nunca podría haber producido.
+
+---
+
+## 10. El resumen muestra el historial, y se pagina en el navegador
+
+**Problema.** El resumen del estudiante mostraba solo su última solicitud. Perdía información útil: quien fue rechazado y volvió a pedir no veía su antecedente, y el detalle de una solicitud vieja quedaba sin forma de alcanzarse desde la interfaz.
+
+**Opciones.**
+1. Seguir mostrando la última y agregar un enlace a un historial aparte.
+2. Un endpoint paginado en el servidor, como el listado del administrador.
+3. Un endpoint que devuelve el historial completo, paginado en el navegador.
+
+**Elección.** La 3: `GET /solicitudes/mias` devuelve todas las del estudiante, de la más nueva a la más vieja, y la pantalla las pagina de a cinco.
+
+**Por qué.** La paginación en el servidor existe para no traer lo que no se va a mostrar. Un estudiante junta unas pocas solicitudes en toda su vida con el producto — el cupo de una activa lo garantiza —, así que paginar del lado del servidor agregaría una consulta de conteo y un viaje de red por página para ordenar, en el mejor de los casos, seis filas. El listado del administrador sí se pagina en el servidor, porque ahí crecen sin techo. **La misma decisión da resultados opuestos según cuántas filas haya del otro lado**, y eso es lo que hay que poder explicar.
+
+El contrato de la respuesta es `{ data, total }`, igual que el listado del administrador, para que el cliente no tenga que aprender dos formas distintas de leer una lista.
+
+**Qué reemplaza.** `GET /solicitudes/mia`, que devolvía solo la última y respondía `204` cuando no había ninguna, se elimina en vez de quedar conviviendo: el historial responde la misma pregunta y una más. Con él se fue el `pedirJsonOpcional` del cliente HTTP, que existía solo para ese `204`. Un endpoint que nadie usa es código muerto, y la lista vacía es una respuesta más simple de consumir que un `204` sin cuerpo.
+
+---
+
+## 11. Quién puede ver las solicitudes de un estudiante
+
+**Problema.** El historial necesita una regla de permiso, y el detalle de una solicitud ya tenía la suya escrita aparte: `usuario.puedeGestionarSolicitudes() || usuario.id === this.usuarioId`. Dos reglas equivalentes en dos lugares es la forma en que empiezan a divergir.
+
+**Elección.** Una sola definición en `Usuario`:
+
+```ts
+puedeVerSolicitudesDe(usuarioId: string): boolean {
+  return this.esAdmin() || this.id === usuarioId;
+}
+```
+
+`Solicitud.esVisiblePara` pasó a delegar en ella, y el servicio del historial la consulta antes de ir a la base.
+
+**Por qué.** El permiso de un estudiante sobre lo suyo es del estudiante: no necesita un rol especial para mirar sus propias solicitudes, lo necesita para mirar las ajenas. Escrito así, la frase del negocio y la línea de código dicen lo mismo, y el detalle y el historial no pueden contestar distinto a la misma pregunta.
+
+**Qué habilita.** El servicio expone `listarDeUsuario(usuarioId, quienPregunta)` en vez de un método atado al "yo": el día que el analista de créditos quiera ver el historial completo de un estudiante desde su ficha, el endpoint ya está escrito y la regla ya lo permite, sin tocar el dominio.
