@@ -13,6 +13,7 @@ export function Tarjeta({ titulo, accion, children, className }: PropsDeTarjeta)
     <section
       className={clases(
         "rounded-tarjeta border border-bc-borde bg-bc-superficie p-5 sm:p-6",
+        "transition-[border-color,box-shadow] duration-[--bc-media]",
         className,
       )}
     >

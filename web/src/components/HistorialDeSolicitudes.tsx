@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Badge } from "@/components/ui/Badge";
+import { Revelar } from "@/components/ui/Revelar";
 import { Dato, Tarjeta } from "@/components/ui/Tarjeta";
 import {
   formatearFecha,
@@ -47,18 +48,26 @@ export function HistorialDeSolicitudes({ solicitudes }: Props) {
         </p>
       </div>
 
-      <ul className="flex flex-col gap-3">
-        {visibles.map((solicitud) => (
-          <li key={solicitud.id}>
+      {/*
+        La `key` incluye la página: al cambiar de página React reemplaza la
+        lista entera y la entrada escalonada vuelve a correr. Sin eso, cambiar
+        de página sustituye el texto en silencio y cuesta notar que algo pasó.
+      */}
+      <ul key={actual} className="flex flex-col gap-3">
+        {visibles.map((solicitud, posicion) => (
+          <Revelar como="li" key={solicitud.id} indice={posicion}>
             <Tarjeta
+              className="hover:border-bc-primary/40 hover:shadow-[0_2px_12px_rgba(70,84,205,0.08)]"
               titulo={`Solicitud #${referenciaCorta(solicitud.id)}`}
               accion={<Badge estado={solicitud.estado} />}
             >
               <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <Dato etiqueta="Monto">{formatearSoles(solicitud.monto)}</Dato>
+                <Dato etiqueta="Monto">
+                  <span className="tabular-nums">{formatearSoles(solicitud.monto)}</span>
+                </Dato>
                 <Dato etiqueta="Plazo">{formatearPlazo(solicitud.plazoMeses)}</Dato>
                 <Dato etiqueta="Cuota mensual">
-                  {formatearSoles(solicitud.cuotaMensual)}
+                  <span className="tabular-nums">{formatearSoles(solicitud.cuotaMensual)}</span>
                 </Dato>
                 <Dato etiqueta="Enviada el">{formatearFecha(solicitud.creadoEn)}</Dato>
               </dl>
@@ -69,19 +78,19 @@ export function HistorialDeSolicitudes({ solicitudes }: Props) {
                 Ver detalle de la solicitud →
               </Link>
             </Tarjeta>
-          </li>
+          </Revelar>
         ))}
       </ul>
 
       {paginas > 1 && (
         <nav
           aria-label="Paginación del historial"
-          className="flex items-center justify-between gap-3"
+          className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between"
         >
           <p className="text-sm text-bc-apagado">
             Mostrando {desde + 1}–{desde + visibles.length} de {solicitudes.length}
           </p>
-          <div className="flex items-center gap-1">
+          <div className="flex flex-wrap items-center gap-1">
             <BotonDePagina
               onClick={() => setPagina(actual - 1)}
               deshabilitado={actual === 1}

@@ -190,3 +190,50 @@ puedeVerSolicitudesDe(usuarioId: string): boolean {
 **Por qué.** El permiso de un estudiante sobre lo suyo es del estudiante: no necesita un rol especial para mirar sus propias solicitudes, lo necesita para mirar las ajenas. Escrito así, la frase del negocio y la línea de código dicen lo mismo, y el detalle y el historial no pueden contestar distinto a la misma pregunta.
 
 **Qué habilita.** El servicio expone `listarDeUsuario(usuarioId, quienPregunta)` en vez de un método atado al "yo": el día que el analista de créditos quiera ver el historial completo de un estudiante desde su ficha, el endpoint ya está escrito y la regla ya lo permite, sin tocar el dominio.
+
+---
+
+## 12. Las animaciones como sistema, no como adorno
+
+**Problema.** La interfaz estaba quieta: los estados aparecían y desaparecían sin transición. En pantallas que se renderizan en el servidor y esperan a la API, eso se nota como lentitud — el navegador se queda con la pantalla anterior y parece colgado — y un dato que cambia sin aviso, como la cuota estimada al mover el plazo, pasa desapercibido.
+
+**Opciones.**
+1. Una librería de animación (Framer Motion o similar).
+2. Transiciones sueltas, decididas componente por componente.
+3. Un sistema chico en los design tokens: una curva, tres duraciones y seis animaciones con nombre.
+
+**Elección.** La 3.
+
+**Por qué.** Framer Motion resuelve cosas que este proyecto no tiene —gestos, animaciones interrumpibles, layout compartido— y a cambio suma un paquete y una API más que defender. Las transiciones sueltas terminan en seis duraciones distintas y una interfaz que se mueve distinto en cada pantalla.
+
+Poner el movimiento en `@theme` junto a los colores lo convierte en parte del sistema de diseño: una sola curva (`--bc-curva`, que desacelera fuerte al final, como se mueven las cosas con peso) y tres duraciones. Es CSS puro, así que funciona en componentes de servidor y no cuesta JavaScript en el cliente.
+
+**El criterio para agregar una animación.** Cada una explica un cambio de estado que, sin ella, el usuario tendría que descubrir releyendo la pantalla:
+
+| Dónde | Qué comunica |
+|---|---|
+| Cuota estimada en vivo | El número cambió por lo que acabás de tocar. La `key` es el valor, así que React reemplaza el nodo y la animación vuelve a correr sola |
+| Botón en espera | El gesto llegó y el servidor está trabajando |
+| Error de validación | Apareció algo nuevo debajo del campo, no estaba antes |
+| Entrada escalonada de listas | Hay orden y hay varias filas, no una masa de texto |
+| Esqueletos de carga | La pantalla está viniendo, con la forma que va a tener |
+| Tilde de confirmación | Esto terminó bien — el único momento del flujo que merece celebrarse |
+| Marca de sección activa | Cambiaste de sección |
+
+Nada rebota, nada gira por decoración y nada dura más de 420 ms.
+
+**Accesibilidad.** `prefers-reduced-motion: reduce` apaga todo el movimiento de la aplicación desde una sola regla global. Se puede hacer sin perder nada porque **ninguna animación transporta información**: el estado se lee en el badge, el error en el texto, la carga en el `role="status"`. El movimiento acompaña, no informa.
+
+---
+
+## 13. Tarjetas en móvil, tabla en escritorio
+
+**Problema.** El listado del administrador tiene siete columnas y necesita 46 rem para leerse. A 390 px eso obliga a desplazarse en horizontal para llegar al estado, que es justamente el dato por el que se entra a esa pantalla.
+
+**Opciones.** (1) Dejar el desplazamiento horizontal. (2) Esconder columnas en pantallas chicas. (3) Dos presentaciones de los mismos datos, elegidas por ancho.
+
+**Elección.** La 3: tarjetas debajo de `md`, tabla a partir de ahí.
+
+**Por qué.** El desplazamiento horizontal esconde justo lo que se vino a ver. Esconder columnas deja al analista sin datos para decidir. La tarjeta pone el nombre y el estado arriba, el resto en una grilla de dos por dos, y convierte toda la fila en zona tocable — que en un teléfono importa más que en un ratón.
+
+Es más markup, y es deliberado: los datos salen del mismo arreglo y se pintan dos veces, en lugar de forzar una tabla a comportarse como algo que no es.

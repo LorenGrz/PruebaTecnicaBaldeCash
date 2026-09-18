@@ -23,7 +23,11 @@ export function EnvoltorioDeCampo({
       </label>
       {children}
       {error ? (
-        <p id={`${id}-error`} role="alert" className="text-xs font-medium text-bc-rechazada">
+        <p
+          id={`${id}-error`}
+          role="alert"
+          className="animate-desplegar text-xs font-medium text-bc-rechazada"
+        >
           {error}
         </p>
       ) : ayuda ? (
