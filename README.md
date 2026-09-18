@@ -312,8 +312,9 @@ propios datos sin tocar los del seed.
 
 ## Uso de inteligencia artificial
 
-Todo el proyecto se desarrolló con **Claude Code** (modelo Opus 5), y está declarado
+Todo el proyecto se desarrollo con **Claude Code** (modelos Opus 5, Sonnet 5, y Haiku, dependiendo de la dificultad de las tareas), y está declarado
 acá como pide el enunciado.
+Como IDE utilizo VSCode
 
 | Parte | Cómo se usó |
 |---|---|
