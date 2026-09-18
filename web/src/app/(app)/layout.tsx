@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { EncabezadoDeApp } from "@/components/EncabezadoDeApp";
 import { BarraLateral, type OpcionDeNavegacion } from "@/components/ui/BarraLateral";
 import { comoSolicitudDeDominio } from "@/lib/adaptadores";
-import { obtenerMiSolicitud } from "@/lib/servicio";
+import { obtenerMisSolicitudes } from "@/lib/servicio";
 import { exigirSesion, type Sesion } from "@/lib/sesion";
 
 /**
@@ -11,8 +11,10 @@ import { exigirSesion, type Sesion } from "@/lib/sesion";
  */
 async function tieneSolicitudActiva(usuarioId: string): Promise<boolean> {
   try {
-    const solicitud = await obtenerMiSolicitud(usuarioId);
-    return solicitud !== null && comoSolicitudDeDominio(solicitud).estaActiva();
+    const solicitudes = await obtenerMisSolicitudes(usuarioId);
+    return solicitudes.some((solicitud) =>
+      comoSolicitudDeDominio(solicitud).estaActiva(),
+    );
   } catch {
     return false;
   }

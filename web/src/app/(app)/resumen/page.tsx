@@ -1,18 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { HistorialDeSolicitudes } from "@/components/HistorialDeSolicitudes";
 import { TarjetaDeError } from "@/components/TarjetaDeError";
-import { Badge } from "@/components/ui/Badge";
 import { clasesDeBoton } from "@/components/ui/Boton";
-import { Dato, Tarjeta } from "@/components/ui/Tarjeta";
+import { Tarjeta } from "@/components/ui/Tarjeta";
 import { comoErrorDeApi } from "@/lib/api";
 import { comoSolicitudDeDominio } from "@/lib/adaptadores";
-import {
-  formatearFecha,
-  formatearPlazo,
-  formatearSoles,
-  referenciaCorta,
-} from "@/lib/formato";
-import { obtenerMiSolicitud } from "@/lib/servicio";
+import { obtenerMisSolicitudes } from "@/lib/servicio";
 import { exigirRol } from "@/lib/sesion";
 import type { SolicitudDTO } from "@/lib/tipos";
 
@@ -21,12 +15,12 @@ export const metadata: Metadata = {
 };
 
 type Resultado =
-  | { ok: true; solicitud: SolicitudDTO | null }
+  | { ok: true; solicitudes: SolicitudDTO[] }
   | { ok: false; mensaje: string };
 
 async function cargar(usuarioId: string): Promise<Resultado> {
   try {
-    return { ok: true, solicitud: await obtenerMiSolicitud(usuarioId) };
+    return { ok: true, solicitudes: await obtenerMisSolicitudes(usuarioId) };
   } catch (error) {
     return { ok: false, mensaje: comoErrorDeApi(error).message };
   }
@@ -59,7 +53,14 @@ export default async function PaginaDeResumen() {
     );
   }
 
-  const solicitud = resultado.solicitud;
+  const { solicitudes } = resultado;
+
+  // Quién puede pedir de nuevo lo decide el dominio, no esta pantalla: se
+  // puede cuando ninguna solicitud ocupa el cupo. Es la misma regla que aplica
+  // la API al responder 409.
+  const tieneActiva = solicitudes.some((solicitud) =>
+    comoSolicitudDeDominio(solicitud).estaActiva(),
+  );
 
   return (
     <div className="flex flex-col gap-5">
@@ -70,33 +71,18 @@ export default async function PaginaDeResumen() {
         </p>
       </header>
 
-      {solicitud === null ? (
+      {solicitudes.length === 0 ? (
         <SinSolicitudes />
       ) : (
         <>
-          <Tarjeta
-            titulo={`Solicitud #${referenciaCorta(solicitud.id)}`}
-            accion={<Badge estado={solicitud.estado} tamanio="grande" />}
-          >
-            <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <Dato etiqueta="Monto">{formatearSoles(solicitud.monto)}</Dato>
-              <Dato etiqueta="Plazo">{formatearPlazo(solicitud.plazoMeses)}</Dato>
-              <Dato etiqueta="Cuota mensual">{formatearSoles(solicitud.cuotaMensual)}</Dato>
-              <Dato etiqueta="Enviada el">{formatearFecha(solicitud.creadoEn)}</Dato>
-            </dl>
-            <Link
-              href={`/resumen/${solicitud.id}`}
-              className="mt-5 inline-block rounded-campo text-sm font-semibold text-bc-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bc-primary"
-            >
-              Ver detalle de la solicitud →
-            </Link>
-          </Tarjeta>
+          <HistorialDeSolicitudes solicitudes={solicitudes} />
 
-          {comoSolicitudDeDominio(solicitud).permiteReenvio() && (
+          {!tieneActiva && (
             <Tarjeta className="flex flex-col items-start gap-3">
-              <h2 className="text-base">Tu solicitud fue rechazada</h2>
+              <h2 className="text-base">Puedes enviar una nueva solicitud</h2>
               <p className="text-sm text-bc-apagado">
-                Puedes enviar una nueva con otro monto o plazo. Un rechazo no te deja fuera.
+                Ninguna de tus solicitudes está en curso. Un rechazo no te deja fuera:
+                puedes volver a pedir con otro monto o plazo.
               </p>
               <Link href="/solicitar" className={clasesDeBoton("primaria")}>
                 Enviar una nueva solicitud
