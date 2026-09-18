@@ -16,5 +16,61 @@ services:
       timeout: 5s
       retries: 10
 
+  api:
+    build:
+      context: ./api
+    container_name: baldecash-api
+    environment:
+      PORT: ${PORT:-3001}
+      WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:3000}
+      TASA_ANUAL: ${TASA_ANUAL:-0.24}
+      # Dentro de la red de Compose la base se ve como el servicio "db" en su
+      # puerto interno (5432 siempre), no como localhost ni como el puerto
+      # publicado en el host por DB_PORT.
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-baldecash}
+      DB_PASSWORD: ${DB_PASSWORD:-baldecash}
+      DB_NAME: ${DB_NAME:-baldecash}
+    ports:
+      - '${PORT:-3001}:${PORT:-3001}'
+    depends_on:
+      db:
+        condition: service_healthy
+    # Migraciones y seed corren solos antes de servir. El seed es idempotente
+    # (borra y recarga), así que es seguro repetirlo en cada arranque. Se
+    # invoca el CLI de TypeORM y el script compilado directamente (sin pasar
+    # por los scripts "pnpm migration:run"/"pnpm seed" del package.json,
+    # porque esos re-ejecutan `nest build`, que necesita devDependencies que
+    # esta imagen ya no tiene).
+    command: >
+      sh -c "node ./node_modules/typeorm/cli.js migration:run -d dist/persistencia/data-source.js &&
+      node dist/persistencia/seed.js &&
+      node dist/main.js"
+    healthcheck:
+      test: ['CMD-SHELL', 'wget --spider -q http://localhost:${PORT:-3001}/api/salud || exit 1']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  web:
+    build:
+      context: ./web
+      args:
+        # Esta URL la consume el navegador de quien visita http://localhost:3000,
+        # no el servidor de Next: por eso apunta al puerto publicado en el host
+        # (localhost:3001) y no al nombre del servicio "api" de la red interna.
+        # Next la incrusta en el bundle del cliente en build time.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001/api}
+    container_name: baldecash-web
+    environment:
+      PORT: ${WEB_PORT:-3000}
+    ports:
+      - '${WEB_PORT:-3000}:${WEB_PORT:-3000}'
+    depends_on:
+      api:
+        condition: service_healthy
+
 volumes:
   datos-postgres:
