@@ -1,0 +1,36 @@
+# Dependencias
+node_modules/
+.pnp*
+.pnpm-store/
+
+# Entorno y secretos
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*credentials*.json
+*secret*.json
+
+# Build
+dist/
+build/
+out/
+.next/
+.turbo/
+coverage/
+*.tsbuildinfo
+
+# Logs y cachés
+*.log
+npm-debug.log*
+pnpm-debug.log*
+.cache/
+tmp/
+
+# Sistema y editores
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
