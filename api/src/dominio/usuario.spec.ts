@@ -75,6 +75,20 @@ describe('Usuario.crear', () => {
     expect(usuario.puedeGestionarSolicitudes()).toBe(false);
   });
 
+  it('el estudiante ve sus propias solicitudes y no las ajenas', () => {
+    const usuario = Usuario.crear({ ...datosValidos, id: 'est-1' });
+
+    expect(usuario.puedeVerSolicitudesDe('est-1')).toBe(true);
+    expect(usuario.puedeVerSolicitudesDe('est-2')).toBe(false);
+  });
+
+  it('el administrador ve las solicitudes de cualquiera', () => {
+    const admin = Usuario.crear({ ...datosValidos, id: 'adm-1', rol: 'admin' });
+
+    expect(admin.puedeVerSolicitudesDe('est-1')).toBe(true);
+    expect(admin.puedeVerSolicitudesDe('adm-1')).toBe(true);
+  });
+
   it('el administrador gestiona pero no solicita', () => {
     const usuario = Usuario.crear({ ...datosValidos, rol: 'admin' });
     expect(usuario.puedeGestionarSolicitudes()).toBe(true);

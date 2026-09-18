@@ -136,6 +136,18 @@ export class Usuario {
     return this.esAdmin();
   }
 
+  /**
+   * Quién puede ver las solicitudes de un estudiante: él mismo, siempre, y el
+   * analista de créditos, que las revisa todas.
+   *
+   * Es la única definición de la regla en el proyecto: la usan el historial y
+   * el detalle de una solicitud. Un estudiante no necesita permiso especial
+   * para mirar lo suyo; lo necesita para mirar lo ajeno.
+   */
+  puedeVerSolicitudesDe(usuarioId: string): boolean {
+    return this.esAdmin() || this.id === usuarioId;
+  }
+
   /** Solo el estudiante pide financiamiento para sí mismo. */
   puedeSolicitarFinanciamiento(): boolean {
     return this.esEstudiante();

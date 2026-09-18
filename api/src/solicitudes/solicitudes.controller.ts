@@ -8,9 +8,7 @@ import {
   Patch,
   Post,
   Query,
-  Res,
 } from '@nestjs/common';
-import type { Response } from 'express';
 import { UsuarioActual } from '../auth/usuario-actual.decorador.js';
 import type { Usuario } from '../dominio/index.js';
 import {
@@ -64,27 +62,30 @@ export class SolicitudesController {
   }
 
   /**
-   * Va declarada **antes** que `:id`: Nest resuelve las rutas en orden y, al
-   * revés, "mia" entraría como si fuera un identificador.
+   * El historial del estudiante, de la más nueva a la más vieja.
    *
-   * Usa `@Res()` porque el estado depende del resultado — 200 con la solicitud
-   * o 204 sin cuerpo — y `@HttpCode()` es fijo por handler.
+   * Va declarada **antes** que `:id`: Nest resuelve las rutas en orden y, al
+   * revés, "mias" entraría como si fuera un identificador.
+   *
+   * Devuelve el historial completo sin paginar: un estudiante junta unas pocas
+   * solicitudes en toda su vida con el producto, así que pagina el navegador.
+   * Se responde `{ data, total }`, la misma forma que el listado del
+   * administrador, para que el cliente no tenga que aprender dos contratos.
    */
-  @Get('mia')
-  async mia(
+  @Get('mias')
+  async mias(
     @UsuarioActual() estudiante: Usuario,
-    @Res() respuesta: Response,
-  ): Promise<void> {
-    const fila = await this.servicio.buscarLaMia(estudiante);
+  ): Promise<{ data: RespuestaDeSolicitud[]; total: number }> {
+    const filas = await this.servicio.listarDeUsuario(
+      estudiante.id ?? '',
+      estudiante,
+    );
 
-    if (!fila) {
-      respuesta.status(HttpStatus.NO_CONTENT).send();
-      return;
-    }
+    const data = filas.map((fila) =>
+      aRespuestaDeSolicitud(fila.solicitud, fila.estudiante),
+    );
 
-    respuesta.status(HttpStatus.OK).json({
-      solicitud: aRespuestaDeSolicitud(fila.solicitud, fila.estudiante),
-    });
+    return { data, total: data.length };
   }
 
   @Get(':id')

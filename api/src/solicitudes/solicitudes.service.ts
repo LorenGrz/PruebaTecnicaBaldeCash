@@ -97,13 +97,31 @@ export class SolicitudesService {
     return { filas, total, page, limit };
   }
 
-  /** La última del estudiante, o `null` si todavía no pidió nada. */
-  async buscarLaMia(estudiante: Usuario): Promise<SolicitudConEstudiante | null> {
-    const solicitud = await this.repositorio.buscarUltimaDeUsuario(
-      this.idDe(estudiante),
-    );
+  /**
+   * El historial de un estudiante. Quien pregunta tiene que poder verlo: la
+   * regla la decide `Usuario`, no este servicio, así que es la misma que
+   * protege el detalle de una solicitud.
+   */
+  async listarDeUsuario(
+    usuarioId: string,
+    quienPregunta: Usuario,
+  ): Promise<SolicitudConEstudiante[]> {
+    if (!quienPregunta.puedeVerSolicitudesDe(usuarioId)) {
+      throw new ErrorDePermiso('Estas solicitudes pertenecen a otro estudiante');
+    }
 
-    return solicitud ? { solicitud, estudiante } : null;
+    const estudiante =
+      quienPregunta.id === usuarioId
+        ? quienPregunta
+        : await this.usuarios.buscarPorId(usuarioId);
+
+    if (!estudiante) {
+      throw new ErrorNoEncontrado('No existe ese estudiante', 'USUARIO_NO_ENCONTRADO');
+    }
+
+    const solicitudes = await this.repositorio.listarDeUsuario(usuarioId);
+
+    return solicitudes.map((solicitud) => ({ solicitud, estudiante }));
   }
 
   async buscarPorId(

@@ -30,6 +30,11 @@ export class UsuariosService {
     return this.repositorio.guardar(usuario);
   }
 
+  /** El estudiante detrás de un id, o `null` si no existe. */
+  async buscarPorId(id: string): Promise<Usuario | null> {
+    return this.repositorio.buscarPorId(id);
+  }
+
   async buscarPorDni(dni: string): Promise<Usuario | null> {
     return this.repositorio.buscarPorDni(dni);
   }
