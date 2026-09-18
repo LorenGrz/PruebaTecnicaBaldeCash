@@ -30,7 +30,12 @@ export class Usuario {
   readonly rol: RolUsuario;
   readonly creadoEn?: Date;
 
-  private constructor(datos: Required<Pick<DatosDeUsuario, 'nombre' | 'dni' | 'email' | 'telefono'>> & DatosDeUsuario) {
+  private constructor(
+    datos: Required<
+      Pick<DatosDeUsuario, 'nombre' | 'dni' | 'email' | 'telefono'>
+    > &
+      DatosDeUsuario,
+  ) {
     this.id = datos.id;
     this.nombre = datos.nombre.trim();
     this.dni = datos.dni.trim();
@@ -44,14 +49,18 @@ export class Usuario {
     if (typeof nombre !== 'string' || nombre.trim().length === 0) {
       return 'El nombre es obligatorio';
     }
-    if (nombre.trim().length < 3) return 'El nombre debe tener al menos 3 caracteres';
-    if (nombre.trim().length > 120) return 'El nombre no puede superar los 120 caracteres';
+    if (nombre.trim().length < 3)
+      return 'El nombre debe tener al menos 3 caracteres';
+    if (nombre.trim().length > 120)
+      return 'El nombre no puede superar los 120 caracteres';
     return null;
   }
 
   static validarDni(dni: unknown): string | null {
-    if (typeof dni !== 'string' || dni.trim().length === 0) return 'El DNI es obligatorio';
-    if (!/^\d{8}$/.test(dni.trim())) return 'El DNI debe tener exactamente 8 dígitos numéricos';
+    if (typeof dni !== 'string' || dni.trim().length === 0)
+      return 'El DNI es obligatorio';
+    if (!/^\d{8}$/.test(dni.trim()))
+      return 'El DNI debe tener exactamente 8 dígitos numéricos';
     return null;
   }
 
@@ -63,7 +72,8 @@ export class Usuario {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) {
       return 'El correo no tiene un formato válido';
     }
-    if (email.trim().length > 160) return 'El correo no puede superar los 160 caracteres';
+    if (email.trim().length > 160)
+      return 'El correo no puede superar los 160 caracteres';
     return null;
   }
 
@@ -90,10 +100,27 @@ export class Usuario {
     revisar('telefono', Usuario.validarTelefono(datos.telefono));
 
     if (detalles.length > 0) {
-      throw new ErrorDeValidacion('Los datos del usuario son inválidos', detalles);
+      throw new ErrorDeValidacion(
+        'Los datos del usuario son inválidos',
+        detalles,
+      );
     }
 
-    return new Usuario(datos as DatosDeUsuario & Required<Pick<DatosDeUsuario, 'nombre' | 'dni' | 'email' | 'telefono'>>);
+    return new Usuario(
+      datos as DatosDeUsuario &
+        Required<Pick<DatosDeUsuario, 'nombre' | 'dni' | 'email' | 'telefono'>>,
+    );
+  }
+
+  /**
+   * Reconstruye un usuario ya guardado. No revalida: los datos entraron por
+   * `crear`, y una regla que se endurezca mañana no debe romper la lectura de
+   * las filas de ayer.
+   */
+  static desdePersistencia(
+    datos: Required<Pick<DatosDeUsuario, 'id' | 'rol'>> & DatosDeUsuario,
+  ): Usuario {
+    return new Usuario(datos);
   }
 
   esAdmin(): boolean {
@@ -118,7 +145,11 @@ export class Usuario {
    * Actualiza los datos de contacto. El DNI no se toca: identifica a la persona
    * y es la clave con la que ingresa.
    */
-  actualizarDatosDeContacto(datos: { nombre: string; email: string; telefono: string }): void {
+  actualizarDatosDeContacto(datos: {
+    nombre: string;
+    email: string;
+    telefono: string;
+  }): void {
     const detalles: DetalleDeError[] = [];
     const revisar = (campo: string, mensaje: string | null) => {
       if (mensaje) detalles.push({ campo, mensaje });
@@ -129,7 +160,10 @@ export class Usuario {
     revisar('telefono', Usuario.validarTelefono(datos.telefono));
 
     if (detalles.length > 0) {
-      throw new ErrorDeValidacion('Los datos de contacto son inválidos', detalles);
+      throw new ErrorDeValidacion(
+        'Los datos de contacto son inválidos',
+        detalles,
+      );
     }
 
     this.nombre = datos.nombre.trim();
