@@ -10,7 +10,13 @@ export interface RespuestaDeSolicitud {
   estado: EstadoSolicitud;
   creadoEn: string | null;
   actualizadoEn: string | null;
-  estudiante: { id: string; nombre: string; dni: string };
+  estudiante: {
+    id: string;
+    nombre: string;
+    dni: string;
+    email: string;
+    telefono: string;
+  };
 }
 
 /**
@@ -36,10 +42,15 @@ export function aRespuestaDeSolicitud(
     estado: solicitud.estado,
     creadoEn: solicitud.creadoEn?.toISOString() ?? null,
     actualizadoEn: solicitud.actualizadoEn?.toISOString() ?? null,
+    // El analista de créditos necesita el contacto del estudiante para
+    // evaluar la solicitud; viene embebido para no obligar a una segunda
+    // llamada por cada fila del listado.
     estudiante: {
       id: estudiante.id,
       nombre: estudiante.nombre,
       dni: estudiante.dni,
+      email: estudiante.email,
+      telefono: estudiante.telefono,
     },
   };
 }
