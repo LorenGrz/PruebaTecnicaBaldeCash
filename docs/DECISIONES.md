@@ -237,3 +237,41 @@ Nada rebota, nada gira por decoración y nada dura más de 420 ms.
 **Por qué.** El desplazamiento horizontal esconde justo lo que se vino a ver. Esconder columnas deja al analista sin datos para decidir. La tarjeta pone el nombre y el estado arriba, el resto en una grilla de dos por dos, y convierte toda la fila en zona tocable — que en un teléfono importa más que en un ratón.
 
 Es más markup, y es deliberado: los datos salen del mismo arreglo y se pintan dos veces, en lugar de forzar una tabla a comportarse como algo que no es.
+
+---
+
+## 14. La regla de solicitud activa, ahora también en la base
+
+**Problema.** "Un estudiante no puede tener dos solicitudes activas" se aplicaba consultando si había una y, si no, insertando. Entre esas dos operaciones hay una ventana: dos peticiones simultáneas del mismo estudiante —un doble clic alcanza— pueden pasar las dos la verificación y crear dos solicitudes. La regla se cumplía en la práctica y se podía romper a propósito.
+
+**Opciones.**
+1. Dejarlo así y documentarlo como limitación conocida.
+2. Una transacción con bloqueo del usuario (`SELECT ... FOR UPDATE`) antes de insertar.
+3. Un índice único parcial que la base sostenga sola.
+
+**Elección.** La 3.
+
+```sql
+CREATE UNIQUE INDEX "idx_solicitudes_activa_por_usuario"
+  ON solicitudes (usuario_id) WHERE estado IN ('pendiente','aprobada');
+```
+
+**Por qué.** El bloqueo funcionaría, pero obliga a recordar abrir la transacción en cada lugar que inserte una solicitud —hoy hay dos, el endpoint y el seed— y el día que aparezca un tercero nadie se va a acordar. El índice no depende de que el código se acuerde: la garantía es de la base y vale para cualquier cliente, incluido un `INSERT` a mano.
+
+Es **parcial** justamente porque la regla lo es: solo restringe las filas `pendiente` y `aprobada`, y deja libres las `rechazada`. Eso es lo que permite volver a pedir después de un rechazo sin ningún caso especial en el código.
+
+**Qué cambió alrededor.** La verificación de la aplicación **se queda**: da un mensaje útil ("Ya tenés una solicitud pendiente") en el caso normal, que es el 99,9% de las veces. El índice cubre el 0,1% restante, y el repositorio traduce su violación (`23505` sobre ese índice concreto) al mismo `409` con el mismo código, para que el cliente vea una sola respuesta posible y nunca un `500`. Solo se traduce ese índice: cualquier otro choque de unicidad es un problema distinto y tiene que seguir subiendo.
+
+**Cómo se verificó.** Las diez peticiones simultáneas terminaron siempre resueltas por la verificación previa —la ventana es de microsegundos y en la práctica no se alcanza—, así que la garantía se probó donde vive: insertando directo en la base. Una segunda `pendiente` para el mismo estudiante da `duplicate key value violates unique constraint`; una `rechazada` entra sin problema. La traducción a `409` tiene tres tests unitarios que simulan el error del driver.
+
+---
+
+## 15. Las migraciones se descubren solas
+
+**Problema.** El `DataSource` listaba las migraciones en un arreglo explícito: había que importar el archivo nuevo y agregarlo a mano. Olvidarse del segundo paso hacía que la migración no existiera para nadie, sin ningún aviso — ni error, ni advertencia, simplemente no corría.
+
+**Elección.** El arreglo pasó a ser un patrón de carpeta (`dist/persistencia/migraciones/*.js`) y se agregaron dos scripts: `migration:create`, que deja el archivo con el nombre y el timestamp correctos, y `migration:generate`, que además compara las entidades contra la base y escribe el SQL.
+
+**Por qué.** Un paso manual que no avisa cuando lo olvidás no es un paso, es una trampa. El descubrimiento por carpeta hace que el archivo exista por estar donde va, que es la única condición que alguien puede recordar.
+
+**Qué costó.** El patrón apunta a `dist`, no a `src`, porque el CLI corre sobre el código compilado igual que la aplicación. Es un detalle a tener presente si alguna vez se cambia la salida del build.

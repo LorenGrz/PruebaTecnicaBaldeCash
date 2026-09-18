@@ -185,11 +185,43 @@ donde no la hay. Está acotado a un archivo
 exactamente el punto donde entraría la verificación real del token: ni los servicios ni
 los controladores cambiarían.
 
+### Una sola solicitud activa, garantizada por la base
+
+La regla se aplica en la aplicación —con un `409` y un mensaje útil— y además la
+sostiene un **índice único parcial**:
+
+```sql
+CREATE UNIQUE INDEX "idx_solicitudes_activa_por_usuario"
+  ON solicitudes (usuario_id) WHERE estado IN ('pendiente','aprobada');
+```
+
+Entre consultar si hay una activa e insertar la nueva hay una ventana, y dos
+peticiones simultáneas del mismo estudiante —un doble clic alcanza— podrían
+pasarla las dos. El índice la cierra: la segunda inserción falla y el repositorio
+traduce ese error al mismo `409`, para que el cliente vea una sola respuesta
+posible y nunca un `500`. Es parcial a propósito: no alcanza a las `rechazada`,
+que es lo que permite volver a pedir después de un rechazo.
+
 ### El esquema solo se crea por migraciones
 
 `synchronize: false` siempre, también en desarrollo. Si el ORM crea las tablas solo, lo
 que corre en una máquina deja de ser lo que describe la migración. Los importes son
 `numeric`, nunca `float`.
+
+Para agregar un cambio de esquema alcanza con crear el archivo; las migraciones
+se descubren solas por carpeta, no hay que registrarlas en ningún lado:
+
+```bash
+cd api
+pnpm migration:create src/persistencia/migraciones/AgregaLoQueSea
+pnpm migration:run        # aplica las pendientes
+pnpm migration:show       # [X] aplicada · [ ] pendiente
+pnpm migration:revert     # deshace la última
+pnpm migration:generate src/persistencia/migraciones/NombreDelCambio
+```
+
+`migration:generate` compara las entidades contra la base y escribe el SQL solo;
+`migration:create` deja el archivo vacío para escribirlo a mano.
 
 La base **repite** las reglas del dominio como `CHECK` (monto entre 1000 y 10000, plazo
 en 6/12/18/24, estados válidos). No es duplicación por descuido: la aplicación valida
@@ -247,18 +279,15 @@ En orden de lo que atacaría primero:
 1. **Autenticación real.** Contraseña con hash, JWT con expiración, refresh con
    rotación y revocación, y protección de rutas en SSR. El guard actual es el único
    punto a cambiar.
-2. **Índice parcial único para la solicitud activa.** Hoy la regla es de aplicación: dos
-   `POST` simultáneos del mismo estudiante podrían pasar los dos. Se cierra con
-   `CREATE UNIQUE INDEX ... ON solicitudes (usuario_id) WHERE estado IN ('pendiente','aprobada')`.
-3. **Monorepo con `packages/dominio`** para eliminar la copia del dominio y el script
+2. **Monorepo con `packages/dominio`** para eliminar la copia del dominio y el script
    que la vigila.
-4. **Tests de frontend** (Testing Library sobre el formulario y el historial) y e2e de
+3. **Tests de frontend** (Testing Library sobre el formulario y el historial) y e2e de
    navegador. Hoy hay 111 tests unitarios y 23 e2e, todos del backend.
-5. **Cronograma de pagos**, que el enunciado explícitamente no pedía.
-6. **CI** que corra lint, typecheck y tests en cada PR.
-7. **Paginación por cursor** en el listado del administrador, si el volumen creciera lo
+4. **Cronograma de pagos**, que el enunciado explícitamente no pedía.
+5. **CI** que corra lint, typecheck y tests en cada PR.
+6. **Paginación por cursor** en el listado del administrador, si el volumen creciera lo
    suficiente como para que `OFFSET` deje de rendir.
-8. **Catálogo de laptops y "Mis cuotas"**, que aparecen en el diseño pero están fuera
+7. **Catálogo de laptops y "Mis cuotas"**, que aparecen en el diseño pero están fuera
    del alcance de la prueba.
 
 ---
