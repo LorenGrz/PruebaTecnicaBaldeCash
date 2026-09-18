@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint --max-warnings 0",
     "typecheck": "next typegen && tsc --noEmit",
-    "format": "prettier --write \"src/**/*.{ts,tsx,css}\""
+    "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
+    "dominio:verificar": "node src/herramientas/verificar-dominio.mjs"
   },
   "dependencies": {
     "next": "16.3.5",

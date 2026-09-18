@@ -68,7 +68,7 @@ const datosDelFormulario = {
 interface RepositorioFalso {
   guardar: ReturnType<typeof vi.fn>;
   buscarPorId: ReturnType<typeof vi.fn>;
-  buscarUltimaDeUsuario: ReturnType<typeof vi.fn>;
+  listarDeUsuario: ReturnType<typeof vi.fn>;
   buscarActivaDeUsuario: ReturnType<typeof vi.fn>;
   listar: ReturnType<typeof vi.fn>;
 }
@@ -77,7 +77,7 @@ function armar(parcial: Partial<RepositorioFalso> = {}) {
   const repositorio: RepositorioFalso = {
     guardar: vi.fn((solicitud: Solicitud) => Promise.resolve(solicitud)),
     buscarPorId: vi.fn(() => Promise.resolve(null)),
-    buscarUltimaDeUsuario: vi.fn(() => Promise.resolve(null)),
+    listarDeUsuario: vi.fn(() => Promise.resolve([])),
     buscarActivaDeUsuario: vi.fn(() => Promise.resolve(null)),
     listar: vi.fn(() =>
       Promise.resolve({ filas: [], total: 0 } satisfies PaginaDeSolicitudes),
@@ -87,6 +87,7 @@ function armar(parcial: Partial<RepositorioFalso> = {}) {
 
   const usuarios = {
     actualizarContacto: vi.fn((usuario: Usuario) => Promise.resolve(usuario)),
+    buscarPorId: vi.fn(() => Promise.resolve(estudiante)),
   };
 
   const config = { getOrThrow: vi.fn(() => TASA) };
@@ -326,22 +327,46 @@ describe('SolicitudesService · listado', () => {
   });
 });
 
-describe('SolicitudesService · /mia', () => {
-  it('devuelve null cuando el estudiante no pidió nada', async () => {
+describe('SolicitudesService · historial del estudiante', () => {
+  it('devuelve una lista vacía cuando todavía no pidió nada', async () => {
     const { servicio } = armar();
 
-    await expect(servicio.buscarLaMia(estudiante)).resolves.toBeNull();
+    await expect(
+      servicio.listarDeUsuario(estudiante.id ?? '', estudiante),
+    ).resolves.toEqual([]);
   });
 
-  it('devuelve la más reciente, aunque la anterior haya sido rechazada', async () => {
+  it('devuelve todo el historial, no solo la última', async () => {
     const { servicio } = armar({
-      buscarUltimaDeUsuario: vi.fn(() =>
-        Promise.resolve(solicitudDe('pendiente')),
+      listarDeUsuario: vi.fn(() =>
+        Promise.resolve([solicitudDe('pendiente'), solicitudDe('rechazada')]),
       ),
     });
 
-    const fila = await servicio.buscarLaMia(estudiante);
+    const filas = await servicio.listarDeUsuario(estudiante.id ?? '', estudiante);
 
-    expect(fila?.solicitud.estado).toBe('pendiente');
+    expect(filas.map((fila) => fila.solicitud.estado)).toEqual([
+      'pendiente',
+      'rechazada',
+    ]);
+  });
+
+  it('un estudiante no puede pedir el historial de otro', async () => {
+    const { servicio } = armar();
+
+    await expect(
+      servicio.listarDeUsuario('otro-estudiante', estudiante),
+    ).rejects.toThrow(ErrorDePermiso);
+  });
+
+  it('el administrador sí puede pedir el historial de un estudiante', async () => {
+    const { servicio } = armar({
+      listarDeUsuario: vi.fn(() => Promise.resolve([solicitudDe('aprobada')])),
+    });
+
+    const filas = await servicio.listarDeUsuario(estudiante.id ?? '', admin);
+
+    expect(filas).toHaveLength(1);
+    expect(filas[0].estudiante.id).toBe(estudiante.id);
   });
 });

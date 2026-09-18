@@ -66,14 +66,21 @@ export class SolicitudesRepositorio {
     return fila ? this.aFila(fila) : null;
   }
 
-  /** La más reciente del estudiante, sin importar el estado. Alimenta `/mia`. */
-  async buscarUltimaDeUsuario(usuarioId: string): Promise<Solicitud | null> {
-    const fila = await this.filas.findOne({
+  /**
+   * El historial completo del estudiante, de la más nueva a la más vieja.
+   *
+   * Va sin paginar a propósito: un estudiante acumula unas pocas solicitudes
+   * en toda su vida con el producto, así que paginar en el servidor agregaría
+   * una consulta de conteo y un ida y vuelta por página para ordenar, en el
+   * mejor de los casos, seis filas. La lista se pagina en el navegador.
+   */
+  async listarDeUsuario(usuarioId: string): Promise<Solicitud[]> {
+    const filas = await this.filas.find({
       where: { usuarioId },
       order: { creadoEn: 'DESC', id: 'DESC' },
     });
 
-    return fila ? aSolicitudDeDominio(fila) : null;
+    return filas.map((fila) => aSolicitudDeDominio(fila));
   }
 
   /**

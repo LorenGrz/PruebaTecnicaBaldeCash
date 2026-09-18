@@ -167,7 +167,7 @@ export class Solicitud {
   }
 
   esVisiblePara(usuario: Usuario): boolean {
-    return usuario.puedeGestionarSolicitudes() || usuario.id === this.usuarioId;
+    return usuario.puedeVerSolicitudesDe(this.usuarioId);
   }
 
   aprobar(porUsuario: Usuario): void {

@@ -2,28 +2,29 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { FormularioDeSolicitud } from "@/components/formularios/FormularioDeSolicitud";
 import { comoSolicitudDeDominio } from "@/lib/adaptadores";
-import { obtenerMiSolicitud } from "@/lib/servicio";
+import { obtenerMisSolicitudes } from "@/lib/servicio";
 import { exigirRol } from "@/lib/sesion";
 
 export const metadata: Metadata = {
   title: "Solicita tu financiamiento | BaldeCash",
 };
 
-/** Devuelve `null` si la API no responde: el formulario se muestra igual. */
-async function solicitudActual(usuarioId: string) {
+/** Devuelve una lista vacía si la API no responde: el formulario se muestra igual. */
+async function historial(usuarioId: string) {
   try {
-    return await obtenerMiSolicitud(usuarioId);
+    return await obtenerMisSolicitudes(usuarioId);
   } catch {
-    return null;
+    return [];
   }
 }
 
 export default async function PaginaDeSolicitar() {
   const sesion = await exigirRol("estudiante");
-  const solicitud = await solicitudActual(sesion.id);
+  const solicitudes = await historial(sesion.id);
 
-  // Una solicitud activa por estudiante: si ya tiene una, el formulario no aplica.
-  if (solicitud !== null && comoSolicitudDeDominio(solicitud).estaActiva()) {
+  // Una solicitud activa por estudiante: si alguna ocupa el cupo, el
+  // formulario no aplica. La regla la responde el dominio, igual que en la API.
+  if (solicitudes.some((solicitud) => comoSolicitudDeDominio(solicitud).estaActiva())) {
     redirect("/resumen");
   }
 

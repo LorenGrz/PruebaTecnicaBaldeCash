@@ -7,11 +7,15 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:-baldecash}
       POSTGRES_DB: ${DB_NAME:-baldecash}
     ports:
-      - '${DB_PORT:-5432}:5432'
+      - "${DB_PORT:-5432}:5432"
     volumes:
       - datos-postgres:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER:-baldecash} -d ${DB_NAME:-baldecash}']
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${DB_USER:-baldecash} -d ${DB_NAME:-baldecash}",
+        ]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -33,7 +37,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-baldecash}
       DB_NAME: ${DB_NAME:-baldecash}
     ports:
-      - '${PORT:-3001}:${PORT:-3001}'
+      - "${PORT:-3001}:${PORT:-3001}"
     depends_on:
       db:
         condition: service_healthy
@@ -48,7 +52,11 @@ services:
       node dist/persistencia/seed.js &&
       node dist/main.js"
     healthcheck:
-      test: ['CMD-SHELL', 'wget --spider -q http://localhost:${PORT:-3001}/api/salud || exit 1']
+      test:
+        [
+          "CMD-SHELL",
+          "wget --spider -q http://localhost:${PORT:-3001}/api/salud || exit 1",
+        ]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -66,8 +74,11 @@ services:
     container_name: baldecash-web
     environment:
       PORT: ${WEB_PORT:-3000}
+      # Las Server Actions llaman a la API desde dentro de la red Compose;
+      # localhost allí apunta al contenedor web, no al servicio api.
+      API_URL_INTERNA: http://api:3001/api
     ports:
-      - '${WEB_PORT:-3000}:${WEB_PORT:-3000}'
+      - "${WEB_PORT:-3000}:${WEB_PORT:-3000}"
     depends_on:
       api:
         condition: service_healthy

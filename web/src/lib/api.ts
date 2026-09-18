@@ -136,13 +136,6 @@ export async function pedirJson<T>(ruta: string, opciones?: OpcionesDePeticion):
   return cuerpo as T;
 }
 
-/** Petición donde el 204 es una respuesta legítima (`/solicitudes/mia`). */
-export async function pedirJsonOpcional<T>(
-  ruta: string,
-  opciones?: OpcionesDePeticion,
-): Promise<T | null> {
-  return (await pedir(ruta, opciones)) as T | null;
-}
 
 /** Convierte cualquier excepción en un `ErrorDeApi` presentable. */
 export function comoErrorDeApi(error: unknown): ErrorDeApi {

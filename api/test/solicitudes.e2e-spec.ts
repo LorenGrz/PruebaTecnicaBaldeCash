@@ -82,7 +82,7 @@ describe('Solicitudes (e2e)', () => {
   describe('identidad', () => {
     it('sin cabecera responde 401', async () => {
       const { body } = await request(app.getHttpServer())
-        .get('/api/solicitudes/mia')
+        .get('/api/solicitudes/mias')
         .expect(401);
 
       expect(body.codigo).toBe('SIN_IDENTIDAD');
@@ -203,22 +203,37 @@ describe('Solicitudes (e2e)', () => {
   });
 
   describe('lectura', () => {
-    it('/mia devuelve la solicitud del estudiante', async () => {
+    it('/mias devuelve el historial del estudiante', async () => {
       const { body } = await request(app.getHttpServer())
-        .get('/api/solicitudes/mia')
+        .get('/api/solicitudes/mias')
         .set(CABECERA, estudiante.id)
         .expect(200);
 
-      expect(body.solicitud.id).toBe(solicitudId);
+      expect(body.total).toBe(body.data.length);
+      expect(body.data.map((fila: { id: string }) => fila.id)).toContain(
+        solicitudId,
+      );
     });
 
-    it('/mia responde 204 cuando el estudiante no pidió nada', async () => {
-      const respuesta = await request(app.getHttpServer())
-        .get('/api/solicitudes/mia')
+    it('/mias devuelve una lista vacía cuando el estudiante no pidió nada', async () => {
+      const { body } = await request(app.getHttpServer())
+        .get('/api/solicitudes/mias')
         .set(CABECERA, otroEstudiante.id)
-        .expect(204);
+        .expect(200);
 
-      expect(respuesta.body).toEqual({});
+      expect(body).toEqual({ data: [], total: 0 });
+    });
+
+    it('/mias solo trae las propias: nunca las de otro estudiante', async () => {
+      const { body } = await request(app.getHttpServer())
+        .get('/api/solicitudes/mias')
+        .set(CABECERA, estudiante.id)
+        .expect(200);
+
+      const ajenas = body.data.filter(
+        (fila: { usuarioId: string }) => fila.usuarioId !== estudiante.id,
+      );
+      expect(ajenas).toEqual([]);
     });
 
     it('el dueño y el administrador ven el detalle', async () => {
@@ -371,14 +386,17 @@ describe('Solicitudes (e2e)', () => {
 
       expect(segunda.body.solicitud.estado).toBe('pendiente');
 
-      // La más reciente es la que ve el estudiante en su resumen.
-      const mia = await request(app.getHttpServer())
-        .get('/api/solicitudes/mia')
+      // El resumen muestra el historial completo, con la más nueva primero:
+      // la rechazada no desaparece, queda como antecedente.
+      const mias = await request(app.getHttpServer())
+        .get('/api/solicitudes/mias')
         .set(CABECERA, otroEstudiante.id)
         .expect(200);
 
-      expect(mia.body.solicitud.id).toBe(segunda.body.solicitud.id);
-      expect(mia.body.solicitud.monto).toBe(2500);
+      expect(mias.body.total).toBe(2);
+      expect(mias.body.data[0].id).toBe(segunda.body.solicitud.id);
+      expect(mias.body.data[0].monto).toBe(2500);
+      expect(mias.body.data[1].estado).toBe('rechazada');
     });
   });
 });

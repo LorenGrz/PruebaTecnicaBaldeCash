@@ -2,7 +2,7 @@
  * Un método por endpoint del contrato de la API. Es la única capa que conoce
  * las rutas; páginas y acciones hablan con funciones con nombre de negocio.
  */
-import { pedirJson, pedirJsonOpcional } from "./api";
+import { pedirJson } from "./api";
 import type {
   FiltroDeSolicitudes,
   PaginaDTO,
@@ -109,12 +109,18 @@ export async function listarSolicitudes(
   return { ...pagina, data: pagina.data.map(normalizarSolicitud) };
 }
 
-/** GET /solicitudes/mia — 204 cuando el estudiante todavía no pidió nada. */
-export async function obtenerMiSolicitud(usuarioId: string): Promise<SolicitudDTO | null> {
-  const sobre = await pedirJsonOpcional<SobreDeSolicitud>("/solicitudes/mia", {
+/**
+ * GET /solicitudes/mias — el historial del estudiante, de la más nueva a la
+ * más vieja. Llega entero y sin paginar: son unas pocas filas por persona, y
+ * paginarlas en el navegador evita un viaje al servidor por cada página.
+ */
+export async function obtenerMisSolicitudes(
+  usuarioId: string,
+): Promise<SolicitudDTO[]> {
+  const pagina = await pedirJson<PaginaDTO<SolicitudCruda>>("/solicitudes/mias", {
     usuarioId,
   });
-  return sobre === null ? null : normalizarSolicitud(sobre.solicitud);
+  return pagina.data.map(normalizarSolicitud);
 }
 
 /** GET /solicitudes/:id — 403 si no es del estudiante ni es admin. */
