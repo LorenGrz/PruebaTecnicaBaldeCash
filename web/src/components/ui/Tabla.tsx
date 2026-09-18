@@ -34,9 +34,21 @@ export function Tabla({
   );
 }
 
-export function Fila({ children }: { children: ReactNode }) {
+export function Fila({
+  children,
+  indice = 0,
+}: {
+  children: ReactNode;
+  /** Posición en la tabla: escalona la entrada de las filas. */
+  indice?: number;
+}) {
   return (
-    <tr className="border-b border-bc-borde last:border-b-0 hover:bg-bc-fondo">{children}</tr>
+    <tr
+      className="animate-entrar border-b border-bc-borde transition-colors duration-[--bc-rapida] last:border-b-0 hover:bg-bc-fondo"
+      style={{ animationDelay: `${Math.min(indice * 40, 280)}ms` }}
+    >
+      {children}
+    </tr>
   );
 }
 

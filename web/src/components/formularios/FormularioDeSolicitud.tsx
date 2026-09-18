@@ -135,9 +135,19 @@ export function FormularioDeSolicitud({ datos }: { datos: DatosPrecargados }) {
           />
         </div>
 
-        <div className="mt-5 flex items-center justify-between gap-4 rounded-campo bg-bc-primary-suave px-4 py-4">
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-campo bg-bc-primary-suave px-4 py-4">
           <p className="text-sm font-semibold text-bc-primary">Cuota mensual estimada</p>
-          <p className="font-display text-2xl font-extrabold text-bc-primary sm:text-3xl">
+          {/*
+            La `key` es el valor: cuando la cuota cambia, React reemplaza el
+            nodo y la animación vuelve a correr. Es lo que hace que mover el
+            plazo se sienta conectado con el número, en vez de que cambie sin
+            aviso mientras el usuario mira el selector.
+            `tabular-nums` evita que los dígitos bailen de ancho al recalcular.
+          */}
+          <p
+            key={cuotaEstimada ?? "sin-cuota"}
+            className="animate-destacar font-display text-2xl font-extrabold tabular-nums text-bc-primary sm:text-3xl"
+          >
             {cuotaEstimada === null ? "—" : formatearSoles(cuotaEstimada)}
           </p>
         </div>

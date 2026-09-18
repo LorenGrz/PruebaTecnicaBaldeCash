@@ -35,6 +35,108 @@
   /* Formas */
   --radius-tarjeta: 14px;
   --radius-campo: 10px;
+
+  /*
+   * Movimiento. Una sola curva y tres duraciones para toda la aplicación: el
+   * movimiento es parte del sistema de diseño, no una decisión por componente.
+   *
+   * La curva desacelera fuerte al final: los elementos llegan rápido y se
+   * asientan, que es como se mueven las cosas con peso. Nada rebota ni gira
+   * porque sí — cada animación de acá abajo existe para explicar un cambio de
+   * estado que, sin ella, el usuario tendría que descubrir releyendo la
+   * pantalla.
+   */
+  --bc-curva: cubic-bezier(0.16, 1, 0.3, 1);
+  --bc-rapida: 140ms;
+  --bc-media: 240ms;
+  --bc-lenta: 420ms;
+
+  /* Entrada de contenido: sube y aparece. */
+  --animate-entrar: entrar var(--bc-lenta) var(--bc-curva) both;
+  @keyframes entrar {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* Un dato que acaba de cambiar y el usuario tiene que notar. */
+  --animate-destacar: destacar 700ms var(--bc-curva);
+  @keyframes destacar {
+    0% {
+      transform: scale(1.06);
+      opacity: 0.55;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  /* Mensaje de error que se despliega debajo de un campo. */
+  --animate-desplegar: desplegar var(--bc-rapida) ease-out both;
+  @keyframes desplegar {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* Trazo del tilde de confirmación. */
+  --animate-trazar: trazar var(--bc-lenta) var(--bc-curva) both;
+  @keyframes trazar {
+    from {
+      stroke-dashoffset: 30;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  /* Esqueletos de carga. */
+  --animate-latir: latir 1.6s ease-in-out infinite;
+  @keyframes latir {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.45;
+    }
+  }
+
+  /* Indicador de espera dentro de un botón. */
+  --animate-girar: girar 800ms linear infinite;
+  @keyframes girar {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+}
+
+/*
+ * Quien pidió menos movimiento en su sistema operativo lo pidió en serio: acá
+ * se apaga todo, incluidas las animaciones de terceros. La información nunca
+ * depende del movimiento — el movimiento solo la acompaña —, así que apagarlo
+ * no deja nada sin comunicar.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 body {

@@ -8,9 +8,14 @@ import type { SolicitudDTO } from "@/lib/tipos";
 /** Confirmación tras el 201: lo primero que se lee es la cuota. */
 export function TarjetaDeExito({ solicitud }: { solicitud: SolicitudDTO }) {
   return (
-    <Tarjeta className="flex flex-col items-center gap-6 text-center">
+    <Tarjeta className="animate-entrar flex flex-col items-center gap-6 text-center">
+      {/*
+        El tilde se dibuja en vez de aparecer: es el único momento del flujo
+        que merece celebrarse, y medio segundo de trazo lo marca como el final
+        de algo, no como una pantalla más.
+      */}
       <span className="flex h-14 w-14 items-center justify-center rounded-full bg-bc-aprobada-suave text-bc-aprobada">
-        <IconoDeExito className="h-7 w-7" />
+        <IconoDeExito className="h-7 w-7 [&_path]:animate-trazar [&_path]:[stroke-dasharray:30]" />
       </span>
 
       <div className="flex flex-col gap-1">
@@ -20,9 +25,12 @@ export function TarjetaDeExito({ solicitud }: { solicitud: SolicitudDTO }) {
         </p>
       </div>
 
-      <div className="w-full rounded-tarjeta bg-bc-primary-suave px-6 py-5">
+      <div
+        className="animate-entrar w-full rounded-tarjeta bg-bc-primary-suave px-6 py-5"
+        style={{ animationDelay: "160ms" }}
+      >
         <p className="text-sm font-medium text-bc-primary">Cuota mensual</p>
-        <p className="font-display text-4xl font-extrabold text-bc-primary">
+        <p className="font-display text-4xl font-extrabold tabular-nums text-bc-primary">
           {formatearSoles(solicitud.cuotaMensual)}
         </p>
       </div>
