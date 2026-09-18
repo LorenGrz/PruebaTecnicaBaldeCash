@@ -41,8 +41,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    # Migraciones y seed corren solos antes de servir. El seed es idempotente
-    # (borra y recarga), así que es seguro repetirlo en cada arranque. Se
+    # Migraciones y seed corren solos antes de servir. El seed solo carga datos
+    # de ejemplo si las tablas están vacías; nunca borra datos existentes. Se
     # invoca el CLI de TypeORM y el script compilado directamente (sin pasar
     # por los scripts "pnpm migration:run"/"pnpm seed" del package.json,
     # porque esos re-ejecutan `nest build`, que necesita devDependencies que

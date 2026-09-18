@@ -88,9 +88,18 @@ async function sembrar(): Promise<void> {
     const repoUsuarios = fuenteDeDatos.getRepository(UsuarioEntidad);
     const repoSolicitudes = fuenteDeDatos.getRepository(SolicitudEntidad);
 
-    // Idempotente: se puede correr las veces que haga falta sin duplicar.
-    await repoSolicitudes.deleteAll();
-    await repoUsuarios.deleteAll();
+    // Solo carga datos de ejemplo en una base nueva. Nunca borra datos de una
+    // base existente al reiniciar la aplicación.
+    const [cantidadUsuarios, cantidadSolicitudes] = await Promise.all([
+      repoUsuarios.count(),
+      repoSolicitudes.count(),
+    ]);
+    if (cantidadUsuarios > 0 || cantidadSolicitudes > 0) {
+      console.log(
+        `Seed omitido: la base ya contiene ${cantidadUsuarios} usuarios y ${cantidadSolicitudes} solicitudes`,
+      );
+      return;
+    }
 
     const guardados = new Map<string, string>();
 
