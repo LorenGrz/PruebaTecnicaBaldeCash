@@ -87,9 +87,15 @@ export default async function PaginaDeCreditos(props: PageProps<"/creditos">) {
       </Tarjeta>
 
       {/*
-        Dos presentaciones de los mismos datos, elegidas por ancho: tarjetas en
-        móvil y tabla desde `md`. La tabla necesita 46rem para leerse; forzarla
-        en 390px esconde el estado detrás de un desplazamiento horizontal.
+        Dos presentaciones de los mismos datos: tarjetas cuando hay poco ancho,
+        tabla cuando entra. La tabla necesita 46rem para leerse, y forzarla en
+        menos esconde el estado detrás de un desplazamiento horizontal, que es
+        justo el dato por el que se entra a esta pantalla.
+
+        El corte lo decide una consulta de contenedor (`@container` + `@3xl`) y
+        no un breakpoint de viewport: la barra lateral se come 16rem, así que a
+        1000px de pantalla esta columna tiene menos de 46rem y el viewport
+        mentía. El contenedor mide lo que la tabla realmente tiene.
       */}
       {data.length === 0 ? (
         <Tarjeta>
@@ -98,8 +104,8 @@ export default async function PaginaDeCreditos(props: PageProps<"/creditos">) {
           </p>
         </Tarjeta>
       ) : (
-        <>
-          <ul key={`${estadoCrudo}-${pagina}`} className="flex flex-col gap-3 md:hidden">
+        <div className="@container flex flex-col gap-3">
+          <ul key={`${estadoCrudo}-${pagina}`} className="flex flex-col gap-3 @3xl:hidden">
             {data.map((solicitud, posicion) => (
               <Revelar como="li" key={solicitud.id} indice={posicion}>
                 <TarjetaDeSolicitud solicitud={solicitud} />
@@ -107,7 +113,7 @@ export default async function PaginaDeCreditos(props: PageProps<"/creditos">) {
             ))}
           </ul>
 
-          <Tarjeta className="hidden p-0 sm:p-0 md:block">
+          <Tarjeta className="hidden p-0 sm:p-0 @3xl:block">
             <Tabla columnas={COLUMNAS}>
               {data.map((solicitud, posicion) => (
                 <Fila key={solicitud.id} indice={posicion}>
@@ -142,7 +148,7 @@ export default async function PaginaDeCreditos(props: PageProps<"/creditos">) {
               ))}
             </Tabla>
           </Tarjeta>
-        </>
+        </div>
       )}
 
       {ultimaPagina > 1 && (
