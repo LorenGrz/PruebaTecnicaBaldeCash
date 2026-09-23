@@ -269,6 +269,9 @@ El enunciado pide asumir lo razonable y documentarlo. Lo que decidí por mi cuen
    estudiante ya esté identificado: así las validaciones de DNI, correo y teléfono que
    pide el enunciado se ejercitan en el endpoint que se va a probar, y el estudiante
    puede corregir sus datos si cambiaron.
+6. **La dirección se pide en el registro y se copia en cada solicitud.** La solicitud
+   conserva la dirección con la que se evaluó, igual que la tasa (ver
+   `docs/DECISIONES.md`, entrada 17).
 
 ---
 

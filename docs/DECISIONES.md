@@ -293,3 +293,24 @@ Es **parcial** justamente porque la regla lo es: solo restringe las filas `pendi
 **Por qué.** `confirm()` no respeta el estilo de la aplicación ni deja mostrar el estado de carga. Una librería no se justifica para un solo modal cuando el navegador ya lo resuelve: `showModal()` pone el diálogo por encima de todo, oscurece el fondo, atrapa el foco adentro y lo cierra con Esc. El foco arranca en Cancelar, que es la opción segura.
 
 **Un detalle de estado.** El diálogo no tiene un `abierto` booleano sincronizado con un efecto: guarda la respuesta de la acción que estaba vigente al abrirlo y está abierto mientras esa siga siendo la actual. Si la API devuelve un error, llega una respuesta nueva y el diálogo se cierra solo para que se vea el aviso. Si sale bien, la página se revalida y la barra de acciones desaparece con la solicitud ya resuelta.
+
+---
+
+## 17. La dirección vive en el usuario y se copia en la solicitud
+
+**Problema.** Había que pedir la dirección del estudiante en todo el flujo: al registrarse, en la solicitud y en las vistas del analista. Primero hubo que decidir de quién es el dato.
+
+**Opciones.**
+
+1. Solo en `usuarios`, como el teléfono. La solicitud la muestra a través del estudiante embebido.
+2. Solo en `solicitudes`. El registro no la pide.
+3. En las dos tablas: el usuario tiene su dirección actual y la solicitud guarda una copia.
+
+**Elección.** La 3. El registro pide la dirección y el formulario de solicitud la precarga. Al enviar, la solicitud guarda su copia y el usuario queda actualizado, igual que pasa hoy con el teléfono.
+
+**Por qué.** Es el mismo criterio que `tasa_anual`: la solicitud tiene que seguir mostrando lo que vio el analista cuando la resolvió. Con la opción 1, si el estudiante se muda, una solicitud aprobada mostraría una dirección que nadie evaluó. La validación vive en un solo lugar, `Usuario.validarDireccion` (obligatoria, de 5 a 200 caracteres), y `Solicitud.crear` la reutiliza. El DTO solo verifica que sea texto y no pase de 200.
+
+**Qué costó.**
+- Las columnas admiten `NULL`. Las filas que ya existían no tienen dirección, y un valor por defecto como `''` se haría pasar por un dato real. La obligatoriedad la exige el dominio al crear. La lectura no revalida (misma regla que `desdePersistencia`), y la interfaz muestra "—".
+- La cookie de sesión suma la dirección para precargar el formulario. Una cookie anterior no la trae, así que se descarta y el usuario vuelve a ingresar una vez.
+- La tabla de `/creditos` no suma columna: ya usa sus 46rem, y un texto libre largo rompería el corte del contenedor. La dirección aparece en el detalle y en la tarjeta.
