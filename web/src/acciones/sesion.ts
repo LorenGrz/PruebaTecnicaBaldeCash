@@ -25,7 +25,7 @@ async function intentarIngreso(dni: string): Promise<Resultado> {
   const base: EstadoDeIngreso = {
     modo: "ingreso",
     dni,
-    valores: { nombre: "", email: "", telefono: "" },
+    valores: { nombre: "", email: "", telefono: "", direccion: "" },
     errores: {},
     mensaje: null,
   };
@@ -50,6 +50,7 @@ async function intentarAlta(formData: FormData): Promise<Resultado> {
     nombre: textoDeFormulario(formData, "nombre"),
     email: textoDeFormulario(formData, "email"),
     telefono: textoDeFormulario(formData, "telefono"),
+    direccion: textoDeFormulario(formData, "direccion"),
   };
   const base: EstadoDeIngreso = { modo: "alta", dni, valores, errores: {}, mensaje: null };
 
@@ -62,6 +63,7 @@ async function intentarAlta(formData: FormData): Promise<Resultado> {
   revisar("dni", Usuario.validarDni(dni));
   revisar("email", Usuario.validarEmail(valores.email));
   revisar("telefono", Usuario.validarTelefono(valores.telefono));
+  revisar("direccion", Usuario.validarDireccion(valores.direccion));
 
   if (Object.keys(errores).length > 0) return { ok: false, estado: { ...base, errores } };
 

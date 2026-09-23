@@ -14,6 +14,8 @@ export interface UsuarioDTO {
   dni: string;
   email: string;
   telefono: string;
+  /** `null` en cuentas creadas antes de que se pidiera la dirección. */
+  direccion: string | null;
   rol: RolUsuario;
   creadoEn?: string;
 }
@@ -25,6 +27,8 @@ export interface EstudianteDTO {
   dni: string;
   email: string;
   telefono: string;
+  /** La dirección actual del estudiante. */
+  direccion: string | null;
 }
 
 export interface SolicitudDTO {
@@ -34,6 +38,11 @@ export interface SolicitudDTO {
   plazoMeses: number;
   tasaAnual: number;
   cuotaMensual: number;
+  /**
+   * La dirección con la que se pidió: puede diferir de `estudiante.direccion`
+   * si después se mudó. `null` en solicitudes anteriores al campo.
+   */
+  direccion: string | null;
   estado: EstadoSolicitud;
   creadoEn: string;
   actualizadoEn?: string;

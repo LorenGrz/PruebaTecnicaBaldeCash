@@ -10,7 +10,7 @@ export interface EstadoDeIngreso {
   /** `ingreso` pide el DNI; `alta` es la misma tarjeta expandida tras un 404. */
   modo: "ingreso" | "alta";
   dni: string;
-  valores: { nombre: string; email: string; telefono: string };
+  valores: { nombre: string; email: string; telefono: string; direccion: string };
   errores: ErroresPorCampo;
   /** Error general: no corresponde a ningún campo (conexión, 409, 500). */
   mensaje: string | null;
@@ -19,7 +19,7 @@ export interface EstadoDeIngreso {
 export const ESTADO_INICIAL_DE_INGRESO: EstadoDeIngreso = {
   modo: "ingreso",
   dni: "",
-  valores: { nombre: "", email: "", telefono: "" },
+  valores: { nombre: "", email: "", telefono: "", direccion: "" },
   errores: {},
   mensaje: null,
 };

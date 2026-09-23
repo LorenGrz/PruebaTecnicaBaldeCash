@@ -48,6 +48,10 @@ export function DetalleDeSolicitud({
           <Dato etiqueta="DNI">{estudiante?.dni ?? "—"}</Dato>
           <Dato etiqueta="Correo">{estudiante?.email ?? "—"}</Dato>
           <Dato etiqueta="Teléfono">{estudiante?.telefono ?? "—"}</Dato>
+          {/*
+            La de la solicitud, no la actual del estudiante: es la que se evaluó.
+          */}
+          <Dato etiqueta="Dirección">{solicitud.direccion ?? "—"}</Dato>
         </dl>
       </Tarjeta>
 

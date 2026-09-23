@@ -43,6 +43,7 @@ export async function enviarSolicitud(
     dni: textoDeFormulario(formData, "dni"),
     email: textoDeFormulario(formData, "email"),
     telefono: textoDeFormulario(formData, "telefono"),
+    direccion: textoDeFormulario(formData, "direccion"),
     monto: numeroDeFormulario(formData, "monto"),
     plazoMeses: numeroDeFormulario(formData, "plazoMeses"),
   };
@@ -55,6 +56,7 @@ export async function enviarSolicitud(
   revisar("dni", Usuario.validarDni(datos.dni));
   revisar("email", Usuario.validarEmail(datos.email));
   revisar("telefono", Usuario.validarTelefono(datos.telefono));
+  revisar("direccion", Usuario.validarDireccion(datos.direccion));
   revisar("monto", Solicitud.validarMonto(datos.monto));
   revisar("plazoMeses", Solicitud.validarPlazo(datos.plazoMeses));
 

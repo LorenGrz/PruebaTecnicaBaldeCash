@@ -31,6 +31,9 @@ export function TarjetaDeSolicitud({ solicitud }: { solicitud: SolicitudDTO }) {
           <p className="truncate text-xs text-bc-apagado">
             DNI {solicitud.estudiante?.dni ?? "—"} · #{referenciaCorta(solicitud.id)}
           </p>
+          <p className="truncate text-xs text-bc-apagado">
+            {solicitud.direccion ?? "Sin dirección"}
+          </p>
         </div>
         <Badge estado={solicitud.estado} />
       </div>

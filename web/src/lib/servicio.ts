@@ -59,6 +59,7 @@ export interface DatosDeAlta {
   dni: string;
   email: string;
   telefono: string;
+  direccion: string;
 }
 
 export interface DatosDeSolicitudNueva extends DatosDeAlta {

@@ -42,6 +42,8 @@ export default async function PaginaDeSolicitar() {
           dni: sesion.dni,
           email: sesion.email,
           telefono: sesion.telefono,
+          // Una cuenta anterior al campo no la tiene: el formulario la pide.
+          direccion: sesion.direccion ?? "",
         }}
       />
     </div>

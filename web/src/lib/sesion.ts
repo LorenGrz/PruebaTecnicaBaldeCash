@@ -19,7 +19,7 @@ const DURACION_EN_SEGUNDOS = 60 * 60 * 24 * 7;
 
 /**
  * Además de la identidad ({@link Sesion.id}, nombre, rol y DNI) se guardan
- * correo y teléfono: el formulario de solicitud los precarga y la API no
+ * correo, teléfono y dirección: el formulario de solicitud los precarga y la API no
  * expone un endpoint para releerlos.
  */
 export interface Sesion {
@@ -29,6 +29,7 @@ export interface Sesion {
   dni: string;
   email: string;
   telefono: string;
+  direccion: string | null;
 }
 
 export const INICIO_POR_ROL: Record<RolUsuario, string> = {
@@ -44,6 +45,7 @@ export function sesionDesdeUsuario(usuario: UsuarioDTO): Sesion {
     dni: usuario.dni,
     email: usuario.email,
     telefono: usuario.telefono,
+    direccion: usuario.direccion,
   };
 }
 
@@ -56,6 +58,9 @@ function esSesion(valor: unknown): valor is Sesion {
     typeof posible.dni === "string" &&
     typeof posible.email === "string" &&
     typeof posible.telefono === "string" &&
+    // Una cookie anterior a la dirección no la trae: se descarta y se vuelve a
+    // ingresar una vez, en vez de precargar el formulario con un hueco.
+    (typeof posible.direccion === "string" || posible.direccion === null) &&
     (posible.rol === "admin" || posible.rol === "estudiante")
   );
 }

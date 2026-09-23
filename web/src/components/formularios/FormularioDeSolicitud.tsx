@@ -20,9 +20,10 @@ export interface DatosPrecargados {
   dni: string;
   email: string;
   telefono: string;
+  direccion: string;
 }
 
-type Tocados = Partial<Record<"nombre" | "email" | "telefono" | "monto", boolean>>;
+type Tocados = Partial<Record<"nombre" | "email" | "telefono" | "direccion" | "monto", boolean>>;
 
 export function FormularioDeSolicitud({ datos }: { datos: DatosPrecargados }) {
   const [estado, accion, pendiente] = useActionState(
@@ -33,6 +34,7 @@ export function FormularioDeSolicitud({ datos }: { datos: DatosPrecargados }) {
   const [nombre, setNombre] = useState(datos.nombre);
   const [email, setEmail] = useState(datos.email);
   const [telefono, setTelefono] = useState(datos.telefono);
+  const [direccion, setDireccion] = useState(datos.direccion);
   const [monto, setMonto] = useState("");
   const [plazoMeses, setPlazoMeses] = useState(PLAZO_POR_DEFECTO);
   const [tocados, setTocados] = useState<Tocados>({});
@@ -62,6 +64,9 @@ export function FormularioDeSolicitud({ datos }: { datos: DatosPrecargados }) {
   const errorTelefono = tocados.telefono
     ? (Usuario.validarTelefono(telefono) ?? undefined)
     : estado.errores.telefono;
+  const errorDireccion = tocados.direccion
+    ? (Usuario.validarDireccion(direccion) ?? undefined)
+    : estado.errores.direccion;
   const errorMonto = tocados.monto ? (errorDeMonto ?? undefined) : estado.errores.monto;
 
   return (
@@ -110,6 +115,19 @@ export function FormularioDeSolicitud({ datos }: { datos: DatosPrecargados }) {
             onBlur={() => tocar("telefono")}
             error={errorTelefono}
           />
+          <div className="sm:col-span-2">
+            <Campo
+              id="direccion"
+              etiqueta="Dirección"
+              autoComplete="street-address"
+              maxLength={200}
+              placeholder="Av. Arequipa 1234, Lince"
+              value={direccion}
+              onChange={(evento) => setDireccion(evento.target.value)}
+              onBlur={() => tocar("direccion")}
+              error={errorDireccion}
+            />
+          </div>
         </div>
       </Tarjeta>
 

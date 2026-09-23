@@ -9,7 +9,7 @@ import { Aviso } from "@/components/ui/Aviso";
 import { Boton } from "@/components/ui/Boton";
 import { Campo } from "@/components/ui/Campo";
 
-type Tocados = Partial<Record<"dni" | "nombre" | "email" | "telefono", boolean>>;
+type Tocados = Partial<Record<"dni" | "nombre" | "email" | "telefono" | "direccion", boolean>>;
 
 /**
  * Tarjeta de ingreso. Es la misma en sus dos fases: pedir el DNI y, cuando la
@@ -26,6 +26,7 @@ export function FormularioDeIngreso() {
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
   const [telefono, setTelefono] = useState("");
+  const [direccion, setDireccion] = useState("");
   const [tocados, setTocados] = useState<Tocados>({});
 
   // Sincroniza el modo con la última respuesta del servidor sin useEffect
@@ -56,6 +57,9 @@ export function FormularioDeIngreso() {
   const errorTelefono = tocados.telefono
     ? (Usuario.validarTelefono(telefono) ?? undefined)
     : delServidor.telefono;
+  const errorDireccion = tocados.direccion
+    ? (Usuario.validarDireccion(direccion) ?? undefined)
+    : delServidor.direccion;
 
   const volverAlDni = () => {
     setModo("ingreso");
@@ -129,6 +133,17 @@ export function FormularioDeIngreso() {
             onChange={(evento) => setTelefono(soloDigitos(evento.target.value, 9))}
             onBlur={() => tocar("telefono")}
             error={errorTelefono}
+          />
+          <Campo
+            id="direccion"
+            etiqueta="Dirección"
+            autoComplete="street-address"
+            maxLength={200}
+            placeholder="Av. Arequipa 1234, Lince"
+            value={direccion}
+            onChange={(evento) => setDireccion(evento.target.value)}
+            onBlur={() => tocar("direccion")}
+            error={errorDireccion}
           />
         </>
       )}
