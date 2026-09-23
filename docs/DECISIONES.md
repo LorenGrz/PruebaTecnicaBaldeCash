@@ -275,3 +275,21 @@ Es **parcial** justamente porque la regla lo es: solo restringe las filas `pendi
 **Por qué.** Un paso manual que no avisa cuando lo olvidás no es un paso, es una trampa. El descubrimiento por carpeta hace que el archivo exista por estar donde va, que es la única condición que alguien puede recordar.
 
 **Qué costó.** El patrón apunta a `dist`, no a `src`, porque el CLI corre sobre el código compilado igual que la aplicación. Es un detalle a tener presente si alguna vez se cambia la salida del build.
+
+---
+
+## 16. Confirmar antes de rechazar
+
+**Problema.** El botón Rechazar enviaba el formulario en el acto, y una solicitud rechazada no vuelve atrás: el dominio solo deja salir de `pendiente`. Un clic equivocado del analista no tenía arreglo.
+
+**Opciones.**
+
+1. `window.confirm()`.
+2. Una librería de modales.
+3. Un `<dialog>` nativo abierto con `showModal()`.
+
+**Elección.** La 3, en una primitiva `DialogoDeConfirmacion`. Rechazar pasa a abrir el diálogo; el botón que envía es "Sí, rechazar", que vive adentro del mismo `<form>` y por eso sigue pasando por la misma server action. Aprobar queda como estaba: también es definitivo, pero el pedido fue proteger el rechazo, y si hiciera falta la misma primitiva sirve para los dos botones.
+
+**Por qué.** `confirm()` no respeta el estilo de la aplicación ni deja mostrar el estado de carga. Una librería no se justifica para un solo modal cuando el navegador ya lo resuelve: `showModal()` pone el diálogo por encima de todo, oscurece el fondo, atrapa el foco adentro y lo cierra con Esc. El foco arranca en Cancelar, que es la opción segura.
+
+**Un detalle de estado.** El diálogo no tiene un `abierto` booleano sincronizado con un efecto: guarda la respuesta de la acción que estaba vigente al abrirlo y está abierto mientras esa siga siendo la actual. Si la API devuelve un error, llega una respuesta nueva y el diálogo se cierra solo para que se vea el aviso. Si sale bien, la página se revalida y la barra de acciones desaparece con la solicitud ya resuelta.
