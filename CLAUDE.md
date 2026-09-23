@@ -16,7 +16,7 @@ defender, gana la que se explica en dos oraciones.
 
 Documentación de producto y decisiones (no repetirla acá):
 `README.md` · `docs/DECISIONES.md` (bitácora problema → opciones → elección → por qué) ·
-`docs/ARRANQUE.md`.
+`docs/ARRANQUE.md` · `docs/prompts/` (enunciado de la prueba y prompt de la UI).
 
 ---
 
@@ -36,7 +36,9 @@ web/src/
   app/            rutas del App Router; (app)/ es el área con sesión
   acciones/       server actions ("use server")
   lib/            api (cliente HTTP) · servicio (un método por endpoint) · sesion · tipos
+                  adaptadores (DTO → dominio) · formato (es-PE) · mensajes · configuracion
   components/     ui/ son primitivas; formularios/ son los componentes cliente
+  herramientas/   verificar-dominio.mjs (lo corre `pnpm dominio:verificar`)
 ```
 
 ---
@@ -53,8 +55,10 @@ pnpm test                         # 114 unitarios
 pnpm test:e2e                     # 23 e2e — necesita la base arriba
 pnpm typecheck && pnpm lint       # tsc --noEmit · oxlint
 pnpm migration:create src/persistencia/migraciones/NombreDelCambio
+pnpm migration:generate src/persistencia/migraciones/NombreDelCambio  # diff entidades ↔ base
 pnpm migration:run | migration:show | migration:revert
 pnpm seed
+pnpm format                       # prettier (también en web/)
 
 # Frontend (desde web/)
 pnpm dev                          # http://localhost:3000
@@ -142,7 +146,8 @@ El guard se saltea solo con `@Publico()`: se protege por defecto y se abre a pro
 - **El seed es idempotente y no borra**: solo carga si las tablas están vacías.
 - **Identidad simplificada**: sin contraseña, la identidad viaja en `x-usuario-id` y la
   cookie de sesión va en base64url sin firmar. Está marcado con `// SIMPLIFICACIÓN:` en
-  `api/src/auth/guard-de-identidad.ts` y en `web/src/lib/sesion.ts`. Es el único punto donde
+  `api/src/auth/guard-de-identidad.ts`, `web/src/lib/sesion.ts` y `web/src/lib/api.ts` (donde se
+  arma la cabecera). Es el único punto donde
   entraría una autenticación real; no esparcir la simplificación a otros archivos.
 
 ---
