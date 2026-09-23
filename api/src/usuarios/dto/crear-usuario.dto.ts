@@ -26,4 +26,9 @@ export class CrearUsuarioDto {
     message: 'El teléfono debe tener 9 dígitos y empezar en 9',
   })
   telefono!: string;
+
+  @IsString({ message: 'La dirección es obligatoria' })
+  @IsNotEmpty({ message: 'La dirección es obligatoria' })
+  @MaxLength(200, { message: 'La dirección no puede superar los 200 caracteres' })
+  direccion!: string;
 }

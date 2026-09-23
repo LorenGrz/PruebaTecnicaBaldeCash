@@ -61,6 +61,10 @@ export class SolicitudEntidad {
   })
   cuotaMensual!: number;
 
+  /** Copia de la dirección al momento del pedido; nula en filas anteriores. */
+  @Column({ type: 'varchar', length: 200, nullable: true })
+  direccion!: string | null;
+
   @Index('idx_solicitudes_estado')
   @Column({ type: 'varchar', length: 20, default: 'pendiente' })
   estado!: EstadoSolicitud;

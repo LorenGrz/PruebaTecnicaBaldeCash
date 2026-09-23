@@ -22,6 +22,7 @@ export class UsuariosService {
       dni: datos.dni,
       email: datos.email,
       telefono: datos.telefono,
+      direccion: datos.direccion,
       rol: 'estudiante',
     });
 
@@ -41,17 +42,18 @@ export class UsuariosService {
 
   /**
    * Los datos personales del formulario de solicitud pisan a los guardados: el
-   * estudiante puede haber cambiado de teléfono desde el alta. El DNI no se
+   * estudiante puede haber cambiado de teléfono o de dirección desde el alta. El DNI no se
    * toca, identifica a la persona.
    */
   async actualizarContacto(
     usuario: Usuario,
-    datos: { nombre: string; email: string; telefono: string },
+    datos: { nombre: string; email: string; telefono: string; direccion: string },
   ): Promise<Usuario> {
     const sinCambios =
       usuario.nombre === datos.nombre.trim() &&
       usuario.email === datos.email.trim().toLowerCase() &&
-      usuario.telefono === datos.telefono.trim();
+      usuario.telefono === datos.telefono.trim() &&
+      usuario.direccion === datos.direccion.trim();
 
     if (sinCambios) return usuario;
 

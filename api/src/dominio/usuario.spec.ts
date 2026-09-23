@@ -6,6 +6,7 @@ const datosValidos = {
   dni: '45871203',
   email: 'clara@ejemplo.pe',
   telefono: '987654321',
+  direccion: 'Av. Arequipa 1234, Lima',
 };
 
 describe('Usuario.validarDni', () => {
@@ -35,6 +36,25 @@ describe('Usuario.validarTelefono', () => {
 
   it('pide el teléfono cuando viene vacío', () => {
     expect(Usuario.validarTelefono('')).toMatch(/obligatorio/);
+  });
+});
+
+describe('Usuario.validarDireccion', () => {
+  it('acepta una dirección de 5 a 200 caracteres', () => {
+    expect(Usuario.validarDireccion('Av. Arequipa 1234, Lima')).toBeNull();
+    expect(Usuario.validarDireccion('a'.repeat(200))).toBeNull();
+  });
+
+  it.each([undefined, null, '', '   '])('la pide cuando viene %p', (direccion) => {
+    expect(Usuario.validarDireccion(direccion)).toMatch(/obligatoria/);
+  });
+
+  it('rechaza menos de 5 caracteres, sin contar los espacios', () => {
+    expect(Usuario.validarDireccion('  Av.  ')).toMatch(/al menos 5/);
+  });
+
+  it('rechaza más de 200 caracteres', () => {
+    expect(Usuario.validarDireccion('a'.repeat(201))).toMatch(/200/);
   });
 });
 
@@ -103,11 +123,12 @@ describe('Usuario.crear', () => {
         dni: '123',
         email: 'nope',
         telefono: '123',
+        direccion: '',
       });
     } catch (error) {
       expect(error).toBeInstanceOf(ErrorDeValidacion);
       expect((error as ErrorDeValidacion).detalles.map((d) => d.campo)).toEqual(
-        ['nombre', 'dni', 'email', 'telefono'],
+        ['nombre', 'dni', 'email', 'telefono', 'direccion'],
       );
     }
   });
@@ -121,9 +142,11 @@ describe('actualizarDatosDeContacto', () => {
       nombre: 'Clara F. Ramírez',
       email: 'nueva@ejemplo.pe',
       telefono: '911222333',
+      direccion: ' Jr. Junín 456, Cusco ',
     });
 
     expect(usuario.nombre).toBe('Clara F. Ramírez');
+    expect(usuario.direccion).toBe('Jr. Junín 456, Cusco');
     expect(usuario.email).toBe('nueva@ejemplo.pe');
     expect(usuario.dni).toBe('45871203');
   });
@@ -136,10 +159,25 @@ describe('actualizarDatosDeContacto', () => {
         nombre: 'Clara F. Ramírez',
         email: 'roto',
         telefono: '911222333',
+        direccion: 'Jr. Junín 456, Cusco',
       }),
     ).toThrow(ErrorDeValidacion);
 
     expect(usuario.nombre).toBe('Clara Fernández');
     expect(usuario.email).toBe('clara@ejemplo.pe');
+    expect(usuario.direccion).toBe('Av. Arequipa 1234, Lima');
+  });
+});
+
+describe('Usuario.desdePersistencia', () => {
+  it('lee una fila anterior a la dirección sin revalidarla', () => {
+    const usuario = Usuario.desdePersistencia({
+      ...datosValidos,
+      id: 'est-1',
+      rol: 'estudiante',
+      direccion: null,
+    });
+
+    expect(usuario.direccion).toBeNull();
   });
 });

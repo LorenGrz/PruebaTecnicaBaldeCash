@@ -6,6 +6,7 @@ export interface RespuestaDeUsuario {
   dni: string;
   email: string;
   telefono: string;
+  direccion: string | null;
   rol: RolUsuario;
   creadoEn: string | null;
 }
@@ -26,6 +27,7 @@ export function aRespuestaDeUsuario(usuario: Usuario): RespuestaDeUsuario {
     dni: usuario.dni,
     email: usuario.email,
     telefono: usuario.telefono,
+    direccion: usuario.direccion,
     rol: usuario.rol,
     creadoEn: usuario.creadoEn?.toISOString() ?? null,
   };

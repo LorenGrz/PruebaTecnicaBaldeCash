@@ -23,6 +23,7 @@ const estudiante = Usuario.desdePersistencia({
   dni: '45871203',
   email: 'clara@ejemplo.pe',
   telefono: '987654321',
+  direccion: 'Av. Arequipa 1234, Lince',
   rol: 'estudiante',
 });
 
@@ -61,6 +62,7 @@ const datosDelFormulario = {
   dni: estudiante.dni,
   email: estudiante.email,
   telefono: estudiante.telefono,
+  direccion: 'Av. Arequipa 1234, Lince',
   monto: 3000,
   plazoMeses: 12,
 };
@@ -154,6 +156,32 @@ describe('SolicitudesService · una sola solicitud activa', () => {
     ).rejects.toBeInstanceOf(ErrorDeValidacion);
 
     expect(repositorio.buscarActivaDeUsuario).not.toHaveBeenCalled();
+  });
+
+  it('la solicitud guarda la dirección del formulario y el contacto la actualiza', async () => {
+    const { servicio, usuarios } = armar();
+    const direccion = 'Jr. Junín 456, Cusco';
+
+    const { solicitud } = await servicio.crear(estudiante, {
+      ...datosDelFormulario,
+      direccion,
+    });
+
+    expect(solicitud.direccion).toBe(direccion);
+    expect(usuarios.actualizarContacto).toHaveBeenCalledWith(
+      estudiante,
+      expect.objectContaining({ direccion }),
+    );
+  });
+
+  it('una dirección inválida es 422 y no toca el contacto', async () => {
+    const { servicio, usuarios } = armar();
+
+    await expect(
+      servicio.crear(estudiante, { ...datosDelFormulario, direccion: 'Av.' }),
+    ).rejects.toMatchObject({ detalles: [{ campo: 'direccion' }] });
+
+    expect(usuarios.actualizarContacto).not.toHaveBeenCalled();
   });
 
   it('no acepta un DNI distinto al de la sesión', async () => {

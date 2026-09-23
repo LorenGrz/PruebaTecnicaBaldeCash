@@ -41,6 +41,11 @@ export class CrearSolicitudDto {
   })
   telefono!: string;
 
+  @IsString({ message: 'La dirección es obligatoria' })
+  @IsNotEmpty({ message: 'La dirección es obligatoria' })
+  @MaxLength(200, { message: 'La dirección no puede superar los 200 caracteres' })
+  direccion!: string;
+
   @IsNumber(
     { allowNaN: false, allowInfinity: false, maxDecimalPlaces: 2 },
     { message: 'El monto debe ser un número con hasta 2 decimales' },

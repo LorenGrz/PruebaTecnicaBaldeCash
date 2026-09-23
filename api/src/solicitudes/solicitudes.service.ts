@@ -56,15 +56,18 @@ export class SolicitudesService {
       monto: datos.monto,
       plazoMeses: datos.plazoMeses,
       tasaAnual: this.config.getOrThrow<number>('tasaAnual'),
+      direccion: datos.direccion,
     });
 
     await this.verificarQueNoTengaOtraActiva(this.idDe(estudiante));
 
-    // Los datos del formulario pisan a los guardados: pudo cambiar el teléfono.
+    // Los datos del formulario pisan a los guardados: pudo cambiar el teléfono
+    // o mudarse. La solicitud ya guardó su propia copia de la dirección.
     const actualizado = await this.usuarios.actualizarContacto(estudiante, {
       nombre: datos.nombre,
       email: datos.email,
       telefono: datos.telefono,
+      direccion: datos.direccion,
     });
 
     return {

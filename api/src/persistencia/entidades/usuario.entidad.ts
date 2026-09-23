@@ -33,6 +33,10 @@ export class UsuarioEntidad {
   @Column({ type: 'char', length: 9 })
   telefono!: string;
 
+  /** Nula solo en filas anteriores a que se pidiera (ver la migración). */
+  @Column({ type: 'varchar', length: 200, nullable: true })
+  direccion!: string | null;
+
   @Column({ type: 'varchar', length: 20, default: 'estudiante' })
   rol!: RolUsuario;
 

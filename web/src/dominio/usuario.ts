@@ -8,6 +8,11 @@ export interface DatosDeUsuario {
   dni: string;
   email: string;
   telefono: string;
+  /**
+   * Obligatoria al crear, pero `null` en las filas que existían antes de que
+   * se pidiera: la lectura no revalida, así que el tipo lo tiene que admitir.
+   */
+  direccion?: string | null;
   rol?: RolUsuario;
   creadoEn?: Date;
 }
@@ -27,6 +32,7 @@ export class Usuario {
   readonly dni: string;
   email: string;
   telefono: string;
+  direccion: string | null;
   readonly rol: RolUsuario;
   readonly creadoEn?: Date;
 
@@ -41,6 +47,7 @@ export class Usuario {
     this.dni = datos.dni.trim();
     this.email = datos.email.trim().toLowerCase();
     this.telefono = datos.telefono.trim();
+    this.direccion = datos.direccion?.trim() ?? null;
     this.rol = datos.rol ?? 'estudiante';
     this.creadoEn = datos.creadoEn;
   }
@@ -87,6 +94,17 @@ export class Usuario {
     return null;
   }
 
+  static validarDireccion(direccion: unknown): string | null {
+    if (typeof direccion !== 'string' || direccion.trim().length === 0) {
+      return 'La dirección es obligatoria';
+    }
+    if (direccion.trim().length < 5)
+      return 'La dirección debe tener al menos 5 caracteres';
+    if (direccion.trim().length > 200)
+      return 'La dirección no puede superar los 200 caracteres';
+    return null;
+  }
+
   /** Valida todos los campos juntos y construye el usuario, o lanza con el detalle. */
   static crear(datos: DatosDeUsuario): Usuario {
     const detalles: DetalleDeError[] = [];
@@ -98,6 +116,7 @@ export class Usuario {
     revisar('dni', Usuario.validarDni(datos.dni));
     revisar('email', Usuario.validarEmail(datos.email));
     revisar('telefono', Usuario.validarTelefono(datos.telefono));
+    revisar('direccion', Usuario.validarDireccion(datos.direccion));
 
     if (detalles.length > 0) {
       throw new ErrorDeValidacion(
@@ -161,6 +180,7 @@ export class Usuario {
     nombre: string;
     email: string;
     telefono: string;
+    direccion: string;
   }): void {
     const detalles: DetalleDeError[] = [];
     const revisar = (campo: string, mensaje: string | null) => {
@@ -170,6 +190,7 @@ export class Usuario {
     revisar('nombre', Usuario.validarNombre(datos.nombre));
     revisar('email', Usuario.validarEmail(datos.email));
     revisar('telefono', Usuario.validarTelefono(datos.telefono));
+    revisar('direccion', Usuario.validarDireccion(datos.direccion));
 
     if (detalles.length > 0) {
       throw new ErrorDeValidacion(
@@ -181,5 +202,6 @@ export class Usuario {
     this.nombre = datos.nombre.trim();
     this.email = datos.email.trim().toLowerCase();
     this.telefono = datos.telefono.trim();
+    this.direccion = datos.direccion.trim();
   }
 }

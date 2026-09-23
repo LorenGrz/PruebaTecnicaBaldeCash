@@ -9,11 +9,14 @@ const estudiante = Usuario.crear({
   dni: '45871203',
   email: 'clara@ejemplo.pe',
   telefono: '987654321',
+  direccion: 'Av. Arequipa 1234, Lince',
   rol: 'estudiante',
 });
 
 const solicitud = () =>
-  Solicitud.crear({ usuario: estudiante, monto: 3000, plazoMeses: 12, tasaAnual: 0.24 });
+  Solicitud.crear({ usuario: estudiante, monto: 3000, plazoMeses: 12, tasaAnual: 0.24,
+    direccion: 'Av. Arequipa 1234, Lince',
+  });
 
 /** Error tal como lo devuelve el driver de PostgreSQL. */
 function violacionDeUnicidad(constraint: string) {

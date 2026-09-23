@@ -7,6 +7,8 @@ export interface RespuestaDeSolicitud {
   plazoMeses: number;
   tasaAnual: number;
   cuotaMensual: number;
+  /** La dirección con la que se pidió, que puede no ser la actual. */
+  direccion: string | null;
   estado: EstadoSolicitud;
   creadoEn: string | null;
   actualizadoEn: string | null;
@@ -16,6 +18,7 @@ export interface RespuestaDeSolicitud {
     dni: string;
     email: string;
     telefono: string;
+    direccion: string | null;
   };
 }
 
@@ -39,6 +42,7 @@ export function aRespuestaDeSolicitud(
     plazoMeses: solicitud.plazoMeses,
     tasaAnual: solicitud.tasaAnual,
     cuotaMensual: solicitud.cuotaMensual,
+    direccion: solicitud.direccion,
     estado: solicitud.estado,
     creadoEn: solicitud.creadoEn?.toISOString() ?? null,
     actualizadoEn: solicitud.actualizadoEn?.toISOString() ?? null,
@@ -51,6 +55,7 @@ export function aRespuestaDeSolicitud(
       dni: estudiante.dni,
       email: estudiante.email,
       telefono: estudiante.telefono,
+      direccion: estudiante.direccion,
     },
   };
 }

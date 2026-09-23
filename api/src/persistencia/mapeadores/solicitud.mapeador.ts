@@ -10,6 +10,7 @@ export function aSolicitudDeDominio(entidad: SolicitudEntidad): Solicitud {
     plazoMeses: entidad.plazoMeses,
     tasaAnual: entidad.tasaAnual,
     cuotaMensual: entidad.cuotaMensual,
+    direccion: entidad.direccion,
     estado: entidad.estado,
     creadoEn: entidad.creadoEn,
     actualizadoEn: entidad.actualizadoEn,
@@ -25,6 +26,7 @@ export function aSolicitudDeEntidad(solicitud: Solicitud): Partial<SolicitudEnti
     plazoMeses: solicitud.plazoMeses,
     tasaAnual: solicitud.tasaAnual,
     cuotaMensual: solicitud.cuotaMensual,
+    direccion: solicitud.direccion,
     estado: solicitud.estado,
   };
 }

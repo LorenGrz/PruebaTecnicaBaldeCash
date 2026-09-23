@@ -9,6 +9,7 @@ export function aUsuarioDeDominio(entidad: UsuarioEntidad): Usuario {
     dni: entidad.dni,
     email: entidad.email,
     telefono: entidad.telefono,
+    direccion: entidad.direccion,
     rol: entidad.rol,
     creadoEn: entidad.creadoEn,
   });
@@ -22,6 +23,7 @@ export function aUsuarioDeEntidad(usuario: Usuario): Partial<UsuarioEntidad> {
     dni: usuario.dni,
     email: usuario.email,
     telefono: usuario.telefono,
+    direccion: usuario.direccion,
     rol: usuario.rol,
   };
 }

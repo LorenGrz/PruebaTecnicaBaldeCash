@@ -3,6 +3,7 @@ import { Solicitud } from './solicitud.js';
 import { Usuario } from './usuario.js';
 
 const TASA = 0.24;
+const DIRECCION = 'Av. Arequipa 1234, Lima';
 
 const estudiante = () =>
   Usuario.crear({
@@ -11,6 +12,7 @@ const estudiante = () =>
     dni: '45871203',
     email: 'clara@ejemplo.pe',
     telefono: '987654321',
+    direccion: DIRECCION,
     rol: 'estudiante',
   });
 
@@ -21,6 +23,7 @@ const admin = () =>
     dni: '10293847',
     email: 'emilio@baldecash.com',
     telefono: '999888777',
+    direccion: DIRECCION,
     rol: 'admin',
   });
 
@@ -99,6 +102,7 @@ describe('Solicitud.crear', () => {
       monto: 3000,
       plazoMeses: 12,
       tasaAnual: TASA,
+      direccion: DIRECCION,
     });
 
     expect(solicitud.estado).toBe('pendiente');
@@ -112,6 +116,7 @@ describe('Solicitud.crear', () => {
       monto: 3000,
       plazoMeses: 12,
       tasaAnual: 0.26,
+      direccion: DIRECCION,
     });
 
     expect(solicitud.tasaAnual).toBe(0.26);
@@ -121,7 +126,7 @@ describe('Solicitud.crear', () => {
   it('junta todos los campos inválidos en un solo error', () => {
     expect.assertions(2);
     try {
-      Solicitud.crear({ usuario: estudiante(), monto: 500, plazoMeses: 7, tasaAnual: TASA });
+      Solicitud.crear({ usuario: estudiante(), monto: 500, plazoMeses: 7, tasaAnual: TASA, direccion: DIRECCION });
     } catch (error) {
       expect(error).toBeInstanceOf(ErrorDeValidacion);
       expect((error as ErrorDeValidacion).detalles.map((d) => d.campo)).toEqual([
@@ -131,16 +136,45 @@ describe('Solicitud.crear', () => {
     }
   });
 
+  it('guarda su propia copia de la dirección, sin espacios de más', () => {
+    const solicitud = Solicitud.crear({
+      usuario: estudiante(),
+      monto: 3000,
+      plazoMeses: 12,
+      tasaAnual: TASA,
+      direccion: '  Jr. Junín 456, Cusco  ',
+    });
+
+    expect(solicitud.direccion).toBe('Jr. Junín 456, Cusco');
+  });
+
+  it('rechaza una dirección demasiado corta', () => {
+    expect.assertions(1);
+    try {
+      Solicitud.crear({
+        usuario: estudiante(),
+        monto: 3000,
+        plazoMeses: 12,
+        tasaAnual: TASA,
+        direccion: 'Av.',
+      });
+    } catch (error) {
+      expect((error as ErrorDeValidacion).detalles.map((d) => d.campo)).toEqual([
+        'direccion',
+      ]);
+    }
+  });
+
   it('no deja que un administrador pida financiamiento para sí mismo', () => {
     expect(() =>
-      Solicitud.crear({ usuario: admin(), monto: 3000, plazoMeses: 12, tasaAnual: TASA }),
+      Solicitud.crear({ usuario: admin(), monto: 3000, plazoMeses: 12, tasaAnual: TASA, direccion: DIRECCION }),
     ).toThrow(ErrorDePermiso);
   });
 });
 
 describe('estados de la solicitud', () => {
   const nueva = () =>
-    Solicitud.crear({ usuario: estudiante(), monto: 3000, plazoMeses: 12, tasaAnual: TASA });
+    Solicitud.crear({ usuario: estudiante(), monto: 3000, plazoMeses: 12, tasaAnual: TASA, direccion: DIRECCION });
 
   it('el administrador la aprueba', () => {
     const solicitud = nueva();
@@ -178,7 +212,7 @@ describe('estados de la solicitud', () => {
 
 describe('esVisiblePara', () => {
   const nueva = () =>
-    Solicitud.crear({ usuario: estudiante(), monto: 3000, plazoMeses: 12, tasaAnual: TASA });
+    Solicitud.crear({ usuario: estudiante(), monto: 3000, plazoMeses: 12, tasaAnual: TASA, direccion: DIRECCION });
 
   it('la ve su dueño', () => {
     expect(nueva().esVisiblePara(estudiante())).toBe(true);
@@ -195,6 +229,7 @@ describe('esVisiblePara', () => {
       dni: '78129034',
       email: 'ethel@ejemplo.pe',
       telefono: '911222333',
+      direccion: DIRECCION,
       rol: 'estudiante',
     });
 

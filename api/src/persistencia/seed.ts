@@ -19,6 +19,7 @@ const usuarios = [
     dni: '10293847',
     email: 'emilio@baldecash.com',
     telefono: '999888777',
+    direccion: 'Av. Javier Prado Este 4200, Surco',
     rol: 'admin' as const,
   },
   {
@@ -26,6 +27,7 @@ const usuarios = [
     dni: '44554475',
     email: 'loren@baldecash.com',
     telefono: '955667788',
+    direccion: 'Calle Las Begonias 441, San Isidro',
     rol: 'admin' as const,
   },
   {
@@ -33,6 +35,7 @@ const usuarios = [
     dni: '45871203',
     email: 'clara.fernandez@ejemplo.pe',
     telefono: '987654321',
+    direccion: 'Av. Arequipa 1234, Lince',
     rol: 'estudiante' as const,
   },
   {
@@ -40,6 +43,7 @@ const usuarios = [
     dni: '78129034',
     email: 'ethel.castillo@ejemplo.pe',
     telefono: '911222333',
+    direccion: 'Jr. Junín 456, Cusco',
     rol: 'estudiante' as const,
   },
   {
@@ -47,6 +51,7 @@ const usuarios = [
     dni: '61203948',
     email: 'rodrigo.salazar@ejemplo.pe',
     telefono: '944556677',
+    direccion: 'Av. Ejército 710, Arequipa',
     rol: 'estudiante' as const,
   },
   {
@@ -54,6 +59,7 @@ const usuarios = [
     dni: '39485712',
     email: 'milagros.quispe@ejemplo.pe',
     telefono: '933221144',
+    direccion: 'Calle Real 215, Huancayo',
     rol: 'estudiante' as const,
   },
 ];
@@ -128,6 +134,7 @@ async function sembrar(): Promise<void> {
         monto: datos.monto,
         plazoMeses: datos.plazoMeses,
         tasaAnual: TASA_ANUAL,
+        direccion: dueno.direccion,
       });
 
       // Los estados finales se aplican con las reglas del dominio, no

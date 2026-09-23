@@ -4,7 +4,7 @@ import {
   ErrorDeValidacion,
   type DetalleDeError,
 } from './errores';
-import type { Usuario } from './usuario';
+import { Usuario } from './usuario';
 
 export type EstadoSolicitud = 'pendiente' | 'aprobada' | 'rechazada';
 
@@ -15,6 +15,8 @@ export interface DatosDeSolicitud {
   plazoMeses: number;
   tasaAnual: number;
   cuotaMensual?: number;
+  /** `null` solo en solicitudes anteriores a que se pidiera la dirección. */
+  direccion?: string | null;
   estado?: EstadoSolicitud;
   creadoEn?: Date;
   actualizadoEn?: Date;
@@ -41,6 +43,12 @@ export class Solicitud {
   readonly plazoMeses: number;
   readonly tasaAnual: number;
   readonly cuotaMensual: number;
+  /**
+   * La dirección con la que se evaluó el pedido. Es una copia y no una
+   * referencia al usuario, por lo mismo que la tasa: si el estudiante se muda,
+   * la solicitud tiene que seguir mostrando el dato que vio el analista.
+   */
+  readonly direccion: string | null;
   private _estado: EstadoSolicitud;
   readonly creadoEn?: Date;
   actualizadoEn?: Date;
@@ -54,6 +62,7 @@ export class Solicitud {
     this.cuotaMensual =
       datos.cuotaMensual ??
       Solicitud.calcularCuota(datos.monto, datos.plazoMeses, datos.tasaAnual);
+    this.direccion = datos.direccion?.trim() ?? null;
     this._estado = datos.estado ?? 'pendiente';
     this.creadoEn = datos.creadoEn;
     this.actualizadoEn = datos.actualizadoEn;
@@ -118,6 +127,7 @@ export class Solicitud {
     monto: number;
     plazoMeses: number;
     tasaAnual: number;
+    direccion: string;
   }): Solicitud {
     const detalles: DetalleDeError[] = [];
     const revisar = (campo: string, mensaje: string | null) => {
@@ -126,6 +136,8 @@ export class Solicitud {
 
     revisar('monto', Solicitud.validarMonto(datos.monto));
     revisar('plazoMeses', Solicitud.validarPlazo(datos.plazoMeses));
+    // Misma regla que la del usuario: una sola definición de dirección válida.
+    revisar('direccion', Usuario.validarDireccion(datos.direccion));
 
     if (detalles.length > 0) {
       throw new ErrorDeValidacion('Los datos de la solicitud son inválidos', detalles);
@@ -147,6 +159,7 @@ export class Solicitud {
       monto: datos.monto,
       plazoMeses: datos.plazoMeses,
       tasaAnual: datos.tasaAnual,
+      direccion: datos.direccion,
       estado: 'pendiente',
     });
   }

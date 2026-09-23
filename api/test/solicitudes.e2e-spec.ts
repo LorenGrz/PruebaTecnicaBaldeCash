@@ -22,6 +22,8 @@ function dniDePrueba(): string {
   return `88${Math.floor(100000 + Math.random() * 899999)}`;
 }
 
+const DIRECCION = 'Av. Arequipa 1234, Lince';
+
 describe('Solicitudes (e2e)', () => {
   let app: INestApplication;
   let baseDeDatos: DataSource;
@@ -40,6 +42,7 @@ describe('Solicitudes (e2e)', () => {
         dni,
         email: `${dni}@prueba.test`,
         telefono: '955443322',
+        direccion: DIRECCION,
       })
       .expect(201);
 
@@ -114,6 +117,7 @@ describe('Solicitudes (e2e)', () => {
           dni: estudiante.dni,
           email: `clon-${estudiante.dni}@prueba.test`,
           telefono: '955443322',
+          direccion: DIRECCION,
         })
         .expect(409);
 
@@ -131,6 +135,7 @@ describe('Solicitudes (e2e)', () => {
           dni: estudiante.dni,
           email: `${estudiante.dni}@prueba.test`,
           telefono: '955443322',
+          direccion: DIRECCION,
           monto: 3000,
           plazoMeses: 12,
         })
@@ -139,6 +144,8 @@ describe('Solicitudes (e2e)', () => {
       expect(body.solicitud.cuotaMensual).toBe(283.68);
       expect(body.solicitud.estado).toBe('pendiente');
       expect(body.solicitud.estudiante.dni).toBe(estudiante.dni);
+      expect(body.solicitud.direccion).toBe(DIRECCION);
+      expect(body.solicitud.estudiante.direccion).toBe(DIRECCION);
 
       solicitudId = body.solicitud.id;
     });
@@ -152,6 +159,7 @@ describe('Solicitudes (e2e)', () => {
           dni: estudiante.dni,
           email: `${estudiante.dni}@prueba.test`,
           telefono: '955443322',
+          direccion: DIRECCION,
           monto: 999,
           plazoMeses: 12,
         })
@@ -173,6 +181,7 @@ describe('Solicitudes (e2e)', () => {
           dni: estudiante.dni,
           email: `${estudiante.dni}@prueba.test`,
           telefono: '123',
+          direccion: DIRECCION,
           monto: 3000,
           plazoMeses: 12,
         })
@@ -181,6 +190,27 @@ describe('Solicitudes (e2e)', () => {
       expect(body.detalles).toContainEqual({
         campo: 'telefono',
         mensaje: 'El teléfono debe tener 9 dígitos y empezar en 9',
+      });
+    });
+
+    it('una dirección demasiado corta la frena el dominio con 422', async () => {
+      const { body } = await request(app.getHttpServer())
+        .post('/api/solicitudes')
+        .set(CABECERA, estudiante.id)
+        .send({
+          nombre: 'Estudiante De Prueba',
+          dni: estudiante.dni,
+          email: `${estudiante.dni}@prueba.test`,
+          telefono: '955443322',
+          direccion: 'Av.',
+          monto: 3000,
+          plazoMeses: 12,
+        })
+        .expect(422);
+
+      expect(body.detalles).toContainEqual({
+        campo: 'direccion',
+        mensaje: 'La dirección debe tener al menos 5 caracteres',
       });
     });
 
@@ -193,6 +223,7 @@ describe('Solicitudes (e2e)', () => {
           dni: estudiante.dni,
           email: `${estudiante.dni}@prueba.test`,
           telefono: '955443322',
+          direccion: DIRECCION,
           monto: 4000,
           plazoMeses: 6,
         })
@@ -362,6 +393,7 @@ describe('Solicitudes (e2e)', () => {
         dni: otroEstudiante.dni,
         email: `${otroEstudiante.dni}@prueba.test`,
         telefono: '955443322',
+        direccion: DIRECCION,
         monto: 2000,
         plazoMeses: 6,
       };

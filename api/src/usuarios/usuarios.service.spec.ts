@@ -7,6 +7,7 @@ const datos = {
   dni: '70001122',
   email: 'valeria.rios@ejemplo.pe',
   telefono: '955443322',
+  direccion: 'Av. Brasil 950, Pueblo Libre',
 };
 
 const existente = Usuario.desdePersistencia({
@@ -81,6 +82,7 @@ describe('UsuariosService · datos de contacto', () => {
       nombre: datos.nombre,
       email: datos.email,
       telefono: datos.telefono,
+      direccion: datos.direccion,
     });
 
     expect(repositorio.guardar).not.toHaveBeenCalled();
@@ -93,9 +95,24 @@ describe('UsuariosService · datos de contacto', () => {
       nombre: datos.nombre,
       email: datos.email,
       telefono: '911111111',
+      direccion: datos.direccion,
     });
 
     expect(actualizado.telefono).toBe('911111111');
+    expect(repositorio.guardar).toHaveBeenCalledOnce();
+  });
+
+  it('guarda la dirección nueva', async () => {
+    const { servicio, repositorio } = armar();
+
+    const actualizado = await servicio.actualizarContacto(existente, {
+      nombre: datos.nombre,
+      email: datos.email,
+      telefono: datos.telefono,
+      direccion: 'Jr. Junín 456, Cusco',
+    });
+
+    expect(actualizado.direccion).toBe('Jr. Junín 456, Cusco');
     expect(repositorio.guardar).toHaveBeenCalledOnce();
   });
 
@@ -116,6 +133,7 @@ describe('UsuariosService · datos de contacto', () => {
         nombre: datos.nombre,
         email: 'ocupado@ejemplo.pe',
         telefono: datos.telefono,
+        direccion: datos.direccion,
       }),
     ).rejects.toMatchObject({ codigo: 'EMAIL_DUPLICADO' });
   });
