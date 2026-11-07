@@ -101,3 +101,57 @@ prevista en un 500 genérico con un `requestId`.
 mensajes debajo del campo correspondiente sin adivinar formatos. El `requestId` permite
 encontrar el error real en los logs sin filtrarle al cliente el stack trace, el nombre de
 la tabla ni la consulta que falló.
+
+---
+
+## 6. Identidad sin contraseña
+
+**Problema.** El producto necesita roles — el estudiante y el analista de créditos no ven lo mismo, y el detalle de una solicitud no puede ser público — pero la prueba se evalúa en 4 horas y ninguno de los cinco criterios premia la autenticación.
+
+**Opciones.**
+1. Login real: hash de contraseña, JWT, refresh, protección de rutas en SSR.
+2. Un selector "actuar como" en la cabecera.
+3. Ingreso por DNI, sin contraseña, con la identidad viajando en un header.
+
+**Elección.** La 3.
+
+**Por qué.** Se navega como una aplicación real — hay una pantalla de ingreso, una sesión y rutas que respetan el rol — sin gastar dos horas en criptografía que después habría que defender a medias. Un JWT sin expiración ni refresh es peor que no tenerlo: aparenta seguridad donde no la hay.
+
+La API recibe la identidad en el header `x-usuario-id` y un guard la resuelve a un usuario con su rol. El archivo está marcado con `// SIMPLIFICACIÓN:` y es lo primero que cambiaría con más tiempo: el guard es exactamente el punto donde entraría la verificación del token, sin tocar nada más.
+
+**Qué costó.** Cualquiera que conozca un id puede hacerse pasar por ese usuario. Es aceptable en una prueba técnica y sería inaceptable en producción; está escrito en el README para que nadie lo descubra leyendo el código.
+
+---
+
+## 7. Una sola aplicación con navegación por rol
+
+**Problema.** El enunciado pide dos vistas: un formulario y un listado. Con dos roles, la pregunta es si son dos aplicaciones, dos rutas sueltas, o una aplicación que se adapta.
+
+**Elección.** Una aplicación con barra lateral filtrada por rol. El administrador ve solo *Gestión de créditos*; el estudiante ve *Mi resumen* y, si no tiene una solicitud activa, *Solicitar financiamiento*.
+
+**Por qué.** Es como funciona el producto real: la misma plataforma, distinto lo que cada uno puede hacer. Además evita el error clásico de "esconder el botón": el filtro se aplica **dos veces**, en la barra lateral y del lado del servidor al entrar a la ruta. Un administrador que escribe `/solicitar` a mano es redirigido, y un estudiante que escribe `/creditos` también. Ocultar una opción es comodidad de la interfaz; la regla la aplica el servidor.
+
+---
+
+## 8. El dominio duplicado entre backend y frontend
+
+**Problema.** Las clases de dominio tienen que correr en los dos lados, pero el repositorio son dos proyectos independientes, sin workspace de pnpm.
+
+**Opciones.**
+1. Monorepo con `packages/dominio` y las dos apps consumiéndolo.
+2. Publicar el dominio como paquete npm.
+3. Copiar los archivos y verificar que las copias no divergen.
+
+**Elección.** La 3, con un script `pnpm dominio:verificar` que hace un `diff` entre las dos carpetas y falla si difieren.
+
+**Por qué.** El monorepo es la respuesta correcta para un proyecto que va a crecer, y es lo que haría con más tiempo. Para esta entrega tenía más valor que cada proyecto se levante solo con un `pnpm install`, sin que el evaluador tenga que entender una configuración de workspace para correr la API. La copia es una decisión consciente, no un descuido, y el script lo demuestra: si alguien cambia una regla en un lado y no en el otro, la verificación falla.
+
+---
+
+## 9. El estado de la solicitud no se escribe, se transiciona
+
+**Problema.** Aprobar una solicitud podría ser un `UPDATE solicitudes SET estado = 'aprobada'`.
+
+**Elección.** El endpoint `PATCH /solicitudes/:id/estado` llama a `solicitud.aprobar(usuario)` o `solicitud.rechazar(usuario)`, que verifican quién lo pide y desde qué estado se sale.
+
+**Por qué.** Escribir la columna directo deja la regla en el controller, donde hay que acordarse de repetirla en cada lugar que toque el estado — el endpoint, el seeder, un script de mantenimiento. Al ponerla en el objeto, una solicitud ya resuelta no puede volver a cambiar de estado **desde ningún lado**. El seeder es la prueba: construye los datos de ejemplo llamando a `aprobar()` y `rechazar()`, así que si mañana una transición deja de ser válida, el seed falla en vez de generar filas que la aplicación nunca podría haber producido.
