@@ -48,3 +48,7 @@ jobs:
           # or https://code.claude.com/docs/en/cli-reference for available options
           # claude_args: '--allowed-tools Bash(gh pr *)'
 
+          # Plugin para ver el coste estimado de cada prompt/sesión con Claude Code
+          plugin_marketplaces: 'https://github.com/anthropics/claude-code.git,https://github.com/Atishyy27/usage-cost-plugin.git'
+          plugins: 'claude-usage-cost@usage-cost-tools'
+
